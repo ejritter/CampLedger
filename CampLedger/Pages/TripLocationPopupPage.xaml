@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
+               x:Class="CampLedger.Pages.TripLocationPopupPage"
+               x:DataType="viewModels:TripLocationPopupViewModel"
+               CanBeDismissedByTappingOutsideOfPopup="False">
+
+    <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+            HeightRequest="{Binding PopupHeight}"
+            WidthRequest="{Binding PopupWidth}"
+            MaximumHeightRequest="{Binding PopupHeight}"
+            MaximumWidthRequest="{Binding PopupWidth}"
+            MinimumHeightRequest="360"
+            MinimumWidthRequest="320"
+            Stroke="{StaticResource PrimaryLight}"
+            StrokeShape="RoundRectangle 16"
+            StrokeThickness="2">
+        <Grid HeightRequest="{Binding PopupHeight}" RowDefinitions="Auto,*,Auto" RowSpacing="0" WidthRequest="{Binding PopupWidth}">
+            <Border Grid.Row="0" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" StrokeThickness="0">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Browse Google Maps" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" />
+                    <Label Text="Search where you are camping. Press Confirm to save." FontAttributes="Italic" FontSize="14" TextColor="{StaticResource Gray500}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid Grid.Row="1" Padding="12,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <WebView x:Name="MapsWebView"
+                         Source="{Binding GoogleMapsUrl}"
+                         Grid.Row="0" />
+            </Grid>
+
+            <Border Grid.Row="2" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" Stroke="{StaticResource Gray400}" StrokeThickness="1">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="{Binding LocationButtonText}"
+                            Clicked="OnConfirmLocationClicked"
+                            BackgroundColor="{StaticResource Success}"
+                            TextColor="{StaticResource White}"
+                            Padding="18,12"
+                            FontSize="16" />
+                    <Button Grid.Column="1"
+                            Text="Cancel"
+                            Clicked="OnCancelClicked"
+                            BackgroundColor="{StaticResource Gray400}"
+                            TextColor="{StaticResource White}"
+                            Padding="18,12"
+                            FontSize="16" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</toolkit:Popup>

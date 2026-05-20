@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="CampLedger.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:CampLedger.Pages"
+    Title="CampLedger"
+    Shell.NavBarHasShadow="True"
+    Shell.FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+    Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+    Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}"
+    Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}"
+    Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}">
+
+    <Shell.FlyoutHeader>
+        <Grid Padding="0,40,0,20" RowDefinitions="Auto,Auto" ColumnDefinitions="*" BackgroundColor="{StaticResource Primary}">
+            <Label Grid.Row="0" Text="CampLedger" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource White}" Margin="20,0" />
+            <Label Grid.Row="1" Text="Camping Trip Planner" FontSize="14" TextColor="{StaticResource PrimaryPale}" Margin="20,0,20,0" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <FlyoutItem Title="CampLedger" Route="MainTabs">
+        <Tab Title="Inventory" Icon="inventory.png" Route="InventoryPage">
+            <ShellContent ContentTemplate="{DataTemplate pages:InventoryPage}" />
+        </Tab>
+
+        <Tab Title="Trip Ledger" Icon="calendar.png" Route="TripLedgerPage">
+            <ShellContent ContentTemplate="{DataTemplate pages:TripLedgerPage}" />
+        </Tab>
+
+        <Tab Title="History" Icon="history.png" Route="TripHistoryPage">
+            <ShellContent ContentTemplate="{DataTemplate pages:TripHistoryPage}" />
+        </Tab>
+    </FlyoutItem>
+
+</Shell>

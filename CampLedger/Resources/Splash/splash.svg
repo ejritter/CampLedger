@@ -1,0 +1,43 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="campLedgerGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A5C3B"/>
+      <stop offset="40%" stop-color="#1FAE6A"/>
+      <stop offset="75%" stop-color="#4ED08A"/>
+      <stop offset="100%" stop-color="#A8F2C8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="512" cy="512" r="480" fill="url(#campLedgerGrad)"/>
+
+  <!-- Tent Shape -->
+  <path fill="#FFFFFF" d="
+    M 256 700
+    L 512 260
+    L 768 700
+    L 690 700
+    L 512 380
+    L 334 700
+    Z
+  "/>
+
+  <!-- Ledger / Checkmark Overlay -->
+  <path fill="#FFFFFF" d="
+    M 600 720
+    L 600 560
+    L 660 560
+    L 660 720
+    Z
+  "/>
+
+  <path fill="#FFFFFF" d="
+    M 580 600
+    L 610 630
+    L 680 540
+    L 710 565
+    L 610 690
+    L 550 630
+    Z
+  "/>
+</svg>
