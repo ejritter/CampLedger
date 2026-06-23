@@ -3,6 +3,7 @@ using System.Text;
 using CampLedger.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Hosting;
+using Microsoft.Maui.Storage;
 
 namespace CampLedger;
 
@@ -11,30 +12,86 @@ public partial class App : Application
     private const string StartupErrorLogFileName = "startup-errors.log";
     private readonly IThemeService _themeService;
     private readonly IServiceProvider? _serviceProvider;
+    private bool _themeInitialized;
 
     public App()
     {
-        InitializeComponent();
-        _serviceProvider = IPlatformApplication.Current?.Services;
-        _themeService = _serviceProvider?.GetService<IThemeService>() ?? new ThemeService();
-        _themeService.Initialize();
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            LogStartupFailure(ex, "InitializeComponent");
+            throw;
+        }
+
+        try
+        {
+            _serviceProvider = IPlatformApplication.Current?.Services;
+            _themeService = _serviceProvider?.GetService<IThemeService>() ?? new ThemeService();
+
+            var services = _serviceProvider ?? new ServiceCollection().BuildServiceProvider();
+            MainPage = services.GetService<AppShell>() ?? new AppShell(services);
+        }
+        catch (Exception ex)
+        {
+            LogStartupFailure(ex, "App constructor initialization");
+            throw;
+        }
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
         try
         {
-            var shell = (_serviceProvider ?? ServiceHelper.Services).GetRequiredService<AppShell>();
-            return new Window(shell);
+            var window = new Window(MainPage ?? new ContentPage
+            {
+                Content = new Label { Text = "CampLedger is starting..." }
+            });
+            window.Created += OnWindowCreated;
+            return window;
         }
         catch (Exception ex)
         {
-            var errorMessage = BuildStartupErrorMessage(ex);
-            Debug.WriteLine(errorMessage);
-            File.WriteAllText(GetStartupErrorLogPath(), errorMessage, Encoding.UTF8);
-            var errorPage = CreateErrorPage(errorMessage);
-            return new Window(errorPage);
+            LogStartupFailure(ex, "CreateWindow shell startup");
+            return new Window(new ContentPage
+            {
+                Content = new Label { Text = ex.Message }
+            });
         }
+    }
+
+    private void OnWindowCreated(object? sender, EventArgs e)
+    {
+        if (sender is not Window window || window.Page is null)
+        {
+            return;
+        }
+
+        window.Page.Loaded += OnPageLoaded;
+    }
+
+    private void OnPageLoaded(object? sender, EventArgs e)
+    {
+        if (_themeInitialized)
+        {
+            return;
+        }
+
+        _themeInitialized = true;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            try
+            {
+                _themeService?.Initialize();
+            }
+            catch (Exception ex)
+            {
+                LogStartupFailure(ex, "Theme initialization after page load");
+            }
+        });
     }
 
     private static Page CreateErrorPage(string errorMessage)
@@ -59,10 +116,27 @@ public partial class App : Application
         };
     }
 
-    private static string BuildStartupErrorMessage(Exception ex)
+    private static void LogStartupFailure(Exception ex, string stage)
+    {
+        try
+        {
+            var message = BuildStartupErrorMessage(ex, stage);
+            File.WriteAllText(GetStartupErrorLogPath(), message, Encoding.UTF8);
+        }
+        catch
+        {
+        }
+    }
+
+    private static string BuildStartupErrorMessage(Exception ex, string? stage = null)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"{DateTimeOffset.Now:O}");
+        if (!string.IsNullOrWhiteSpace(stage))
+        {
+            builder.AppendLine($"Stage: {stage}");
+        }
+
         builder.AppendLine(ex.GetType().FullName);
         builder.AppendLine(ex.Message);
         builder.AppendLine(ex.StackTrace);
@@ -80,6 +154,9 @@ public partial class App : Application
 
     private static string GetStartupErrorLogPath()
     {
-        return Path.Combine(FileSystem.AppDataDirectory, StartupErrorLogFileName);
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var directory = Path.Combine(localAppData, "CampLedger");
+        Directory.CreateDirectory(directory);
+        return Path.Combine(directory, StartupErrorLogFileName);
     }
 }

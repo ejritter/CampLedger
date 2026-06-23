@@ -12,7 +12,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
-		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 		<ApplicationTitle>CampLedger</ApplicationTitle>
 		<ApplicationId>EJRitterDevelopment.campledger</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
