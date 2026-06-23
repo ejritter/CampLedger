@@ -7,10 +7,13 @@ namespace CampLedger.ViewModels;
 
 public sealed partial class TripChecklistItemViewModel : ViewModelBase
 {
+    private ImageSource? _photoSource;
+
     public TripChecklistItemViewModel(TripChecklistItem model)
     {
         Model = model;
         IsPhotoExpanded = false;
+        UpdatePhotoSource();
     }
 
     public TripChecklistItem Model { get; }
@@ -51,12 +54,19 @@ public sealed partial class TripChecklistItemViewModel : ViewModelBase
     {
         get
         {
-            if (!HasPhoto)
-            {
-                return null;
-            }
+            return _photoSource;
+        }
+    }
 
-            return ImageSource.FromStream(() => new MemoryStream(Model.PhotoData!));
+    private void UpdatePhotoSource()
+    {
+        if (!HasPhoto)
+        {
+            _photoSource = null;
+        }
+        else
+        {
+            _photoSource = ImageSource.FromStream(() => new MemoryStream(Model.PhotoData!));
         }
     }
 

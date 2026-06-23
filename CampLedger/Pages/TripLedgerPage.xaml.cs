@@ -9,11 +9,17 @@ namespace CampLedger.Pages;
 public partial class TripLedgerPage : ContentPage
 {
     private CancellationTokenSource? _notesSaveCts;
+    private bool _suppressRefreshOnAppearing;
 
     public TripLedgerPage()
+        : this(ServiceHelper.GetService<TripLedgerViewModel>())
+    {
+    }
+
+    public TripLedgerPage(TripLedgerViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = ServiceHelper.GetService<TripLedgerViewModel>();
+        BindingContext = viewModel;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -22,7 +28,15 @@ public partial class TripLedgerPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        ViewModel.RefreshFromHasListCommand.Execute(null);
+        if (_suppressRefreshOnAppearing)
+        {
+            // Skip a single automatic refresh caused by closing a popup launched from this page.
+            _suppressRefreshOnAppearing = false;
+        }
+        else
+        {
+            ViewModel.RefreshFromHasListCommand.Execute(null);
+        }
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -67,7 +81,11 @@ public partial class TripLedgerPage : ContentPage
             var popup = new TripLocationPopupPage(initialLocation, false);
 
             System.Diagnostics.Debug.WriteLine("ShowLocationPopupAsync: Showing toolkit popup");
+            // Suppress the OnAppearing refresh that occurs when the popup closes.
+            _suppressRefreshOnAppearing = true;
             await this.ShowPopupAsync(popup);
+            // Ensure suppression is cleared after popup returns in case OnAppearing wasn't fired.
+            _suppressRefreshOnAppearing = false;
 
             var selectedLocation = popup.SelectedLocation;
             
@@ -95,13 +113,24 @@ public partial class TripLedgerPage : ContentPage
         _notesSaveCts = new CancellationTokenSource();
         var token = _notesSaveCts.Token;
 
-        Task.Delay(TimeSpan.FromSeconds(2), token).ContinueWith(t =>
+        // Use modern async/await for debouncing notes input on the UI thread/ThreadPool properly
+        _ = SaveNotesWithDelayAsync(token);
+    }
+
+    private async Task SaveNotesWithDelayAsync(CancellationToken token)
+    {
+        try
         {
-            if (!t.IsCanceled)
+            await Task.Delay(TimeSpan.FromSeconds(2), token);
+            if (!token.IsCancellationRequested)
             {
                 ViewModel.SaveTrip();
             }
-        }, TaskScheduler.Default);
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected when typing rapidly, safe to ignore
+        }
     }
 
     private void OnTripSearchTextChanged(object? sender, TextChangedEventArgs e)

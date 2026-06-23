@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/CampLedger_Skill.md
+/.github/resume-agent.md
+/.github/profiler-insturctions.md

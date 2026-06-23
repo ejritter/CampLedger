@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
+               x:Class="CampLedger.Pages.ThemeSelectionPopup"
+               x:DataType="viewModels:ThemeSelectionPopupViewModel"
+               CanBeDismissedByTappingOutsideOfPopup="True">
+
+    <Border Padding="20"
+            BackgroundColor="{DynamicResource SurfaceColor}"
+            StrokeShape="RoundRectangle 16"
+            StrokeThickness="1"
+            WidthRequest="400"
+            MinimumWidthRequest="300"
+            MaximumWidthRequest="500">
+        <Border.Stroke>
+            <SolidColorBrush Color="{DynamicResource BorderColor}" />
+        </Border.Stroke>
+
+        <VerticalStackLayout Spacing="16">
+            <Label Text="Choose a theme"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   TextColor="{DynamicResource PrimaryTextColor}" />
+
+            <Label Text="{Binding CurrentThemeName, StringFormat='Current theme: {0}'}"
+                   FontSize="12"
+                   TextColor="{DynamicResource TertiaryTextColor}" />
+
+            <Label Text="Your selection applies immediately."
+                   FontSize="13"
+                   TextColor="{DynamicResource SecondaryTextColor}" />
+
+            <VerticalStackLayout Spacing="10">
+                <Button Text="Regal Earth&#10;Warm earth tones with a royal accent."
+                        Command="{Binding SelectThemeCommand}"
+                        CommandParameter="Regal Earth"
+                        CornerRadius="14"
+                        HeightRequest="64"
+                        HorizontalOptions="Fill"
+                        LineBreakMode="WordWrap"
+                        Padding="14,10"
+                        BorderWidth="1"
+                        BackgroundColor="{DynamicResource SurfaceAltColor}"
+                        TextColor="{DynamicResource PrimaryTextColor}"
+                        BorderColor="{DynamicResource BorderColor}" />
+
+                <Button Text="Wine Desert&#10;Deep wine and desert-inspired tones."
+                        Command="{Binding SelectThemeCommand}"
+                        CommandParameter="Wine Desert"
+                        CornerRadius="14"
+                        HeightRequest="64"
+                        HorizontalOptions="Fill"
+                        LineBreakMode="WordWrap"
+                        Padding="14,10"
+                        BorderWidth="1"
+                        BackgroundColor="{DynamicResource SurfaceAltColor}"
+                        TextColor="{DynamicResource PrimaryTextColor}"
+                        BorderColor="{DynamicResource BorderColor}" />
+
+                <Button Text="Forest Lavender&#10;Green forest tones with lavender accents."
+                        Command="{Binding SelectThemeCommand}"
+                        CommandParameter="Forest Lavender"
+                        CornerRadius="14"
+                        HeightRequest="64"
+                        HorizontalOptions="Fill"
+                        LineBreakMode="WordWrap"
+                        Padding="14,10"
+                        BorderWidth="1"
+                        BackgroundColor="{DynamicResource SurfaceAltColor}"
+                        TextColor="{DynamicResource PrimaryTextColor}"
+                        BorderColor="{DynamicResource BorderColor}" />
+            </VerticalStackLayout>
+
+            <Label Text="AI engineered by EJRitter Development"
+                   FontSize="11"
+                   TextColor="{DynamicResource TertiaryTextColor}" />
+
+            <Button Text="Cancel"
+                    Command="{Binding CancelCommand}"
+                    CornerRadius="14"
+                    HeightRequest="48"
+                    MinimumWidthRequest="44"
+                    BackgroundColor="{DynamicResource SurfaceAltColor}"
+                    TextColor="{DynamicResource PrimaryTextColor}" />
+        </VerticalStackLayout>
+    </Border>
+</toolkit:Popup>

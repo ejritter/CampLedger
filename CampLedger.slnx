@@ -1,3 +1,11 @@
 <Solution>
-  <Project Path="CampLedger/CampLedger.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path="../../Users/roija/.copilot/skills/maui-ui-development/SKILL.md" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CampLedger.Tests/CampLedger.Tests.csproj" />
+  </Folder>
+  <Project Path="CampLedger/CampLedger.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>

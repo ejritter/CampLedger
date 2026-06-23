@@ -1,4 +1,3 @@
-using System.IO;
 using CampLedger.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
@@ -47,7 +46,6 @@ public sealed partial class TripRecordViewModel : ObservableObject
     {
         Trip = trip;
         EditingNotes = trip.Notes;
-        PhotoItems = Trip.Items.Where(i => i.PhotoData is { Length: > 0 }).OrderBy(i => i.Name).Select(i => new TripRecordPhotoItemViewModel(i.Name, i.PhotoData!)).ToList();
         RefreshLocation();
         ResetEditingTripDetails();
     }
@@ -63,16 +61,6 @@ public sealed partial class TripRecordViewModel : ObservableObject
     }
 
     public TripRecord Trip { get; }
-
-    public IReadOnlyList<TripRecordPhotoItemViewModel> PhotoItems { get; }
-
-    public bool HasPhotoItems
-    {
-        get
-        {
-            return PhotoItems.Count > 0;
-        }
-    }
 
     public DateTime StartDate
     {

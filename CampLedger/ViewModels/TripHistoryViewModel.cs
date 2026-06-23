@@ -9,6 +9,7 @@ namespace CampLedger.ViewModels;
 public sealed partial class TripHistoryViewModel : ViewModelBase
 {
     private readonly ICampLedgerStateService _stateService;
+    private readonly IToastNotificationService _toastService;
 
     [ObservableProperty]
     public partial DateTime FilterStartDate { get; set; } = DateTime.Today.AddMonths(-1);
@@ -18,12 +19,6 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool IsFilterActive { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsPhotoPreviewVisible { get; set; }
-
-    [ObservableProperty]
-    public partial ImageSource? PhotoPreviewSource { get; set; }
 
     [ObservableProperty]
     public partial TripRecordViewModel? SelectedLocationTrip { get; set; }
@@ -40,9 +35,10 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsListVisible { get; set; } = true;
 
-    public TripHistoryViewModel(ICampLedgerStateService stateService)
+    public TripHistoryViewModel(ICampLedgerStateService stateService, IToastNotificationService toastService)
     {
         _stateService = stateService;
+        _toastService = toastService;
         Trips = [];
         FilteredTrips = [];
         Refresh();
@@ -99,25 +95,6 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenPhotoPreview(TripRecordPhotoItemViewModel? item)
-    {
-        if (item is null)
-        {
-            return;
-        }
-
-        PhotoPreviewSource = item.PhotoSource;
-        IsPhotoPreviewVisible = true;
-    }
-
-    [RelayCommand]
-    private void ClosePhotoPreview()
-    {
-        IsPhotoPreviewVisible = false;
-        PhotoPreviewSource = null;
-    }
-
-    [RelayCommand]
     private void BeginEditNotes(TripRecordViewModel? record)
     {
         if (record is null)
@@ -154,10 +131,7 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
 
         if (record.EditingEndDate.Date <= record.EditingStartDate.Date)
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Trip Duration Required",
-                "This app is not intended for same day trips. Please plan for at least one night.",
-                "OK");
+            await _toastService.ShowAsync("This app is not intended for same day trips. Please plan for at least one night.");
             return;
         }
 
@@ -221,7 +195,7 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
         // If not editing and there's no location set, do not allow adding one from the read-only view
         if (record.Trip.Location == null)
         {
-            await Shell.Current.DisplayAlertAsync("No Location", "No location has been set for this trip. Click Edit to add a location.", "OK");
+            await _toastService.ShowAsync("No location has been set for this trip. Click Edit to add a location.");
             return;
         }
 
@@ -349,6 +323,14 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
         _stateService.Save();
         Trips.Remove(record);
         FilteredTrips.Remove(record);
+
+        // If the deleted trip was being edited, close editor and restore list visibility.
+        if (EditingTrip == record)
+        {
+            IsEditingTripInFullScreen = false;
+            IsListVisible = true;
+            EditingTrip = null;
+        }
     }
 
     [RelayCommand]
@@ -364,7 +346,7 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(locationUrl))
         {
-            await Shell.Current.DisplayAlertAsync("No Location", "The saved Google Maps link for this trip is empty.", "OK");
+            await _toastService.ShowAsync("The saved Google Maps link for this trip is empty.");
             return;
         }
 

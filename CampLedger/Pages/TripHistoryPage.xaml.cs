@@ -11,9 +11,14 @@ public partial class TripHistoryPage : ContentPage
     private bool _suppressRefreshOnAppearing;
 
     public TripHistoryPage()
+        : this(ServiceHelper.GetService<TripHistoryViewModel>())
+    {
+    }
+
+    public TripHistoryPage(TripHistoryViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = ServiceHelper.GetService<TripHistoryViewModel>();
+        BindingContext = viewModel;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 

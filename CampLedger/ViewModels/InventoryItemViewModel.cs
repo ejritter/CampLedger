@@ -7,17 +7,21 @@ namespace CampLedger.ViewModels;
 
 public sealed partial class InventoryItemViewModel : ViewModelBase
 {
+    private ImageSource? _photoSource;
+
     public InventoryItemViewModel(InventoryItem item, InventoryBucket bucket)
     {
         Item = item;
         Bucket = bucket;
         PhotoData = item.PhotoData;
         IsPhotoExpanded = false;
+        UpdatePhotoSource();
     }
 
     public InventoryItem Item { get; }
 
-    public InventoryBucket Bucket { get; }
+    [ObservableProperty]
+    public partial InventoryBucket Bucket { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TogglePhotoButtonText))]
@@ -62,12 +66,19 @@ public sealed partial class InventoryItemViewModel : ViewModelBase
     {
         get
         {
-            if (!HasPhoto)
-            {
-                return null;
-            }
+            return _photoSource;
+        }
+    }
 
-            return ImageSource.FromStream(() => new MemoryStream(PhotoData!));
+    private void UpdatePhotoSource()
+    {
+        if (!HasPhoto)
+        {
+            _photoSource = null;
+        }
+        else
+        {
+            _photoSource = ImageSource.FromStream(() => new MemoryStream(PhotoData!));
         }
     }
 
@@ -96,6 +107,12 @@ public sealed partial class InventoryItemViewModel : ViewModelBase
     {
         Item.PhotoData = value;
         IsPhotoExpanded = false;
+        UpdatePhotoSource();
+    }
+
+    partial void OnBucketChanged(InventoryBucket value)
+    {
+        Item.Bucket = value;
     }
 
     [RelayCommand]

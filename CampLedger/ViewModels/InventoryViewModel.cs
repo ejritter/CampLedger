@@ -54,10 +54,20 @@ public sealed partial class InventoryViewModel : ViewModelBase
     {
         _stateService = stateService;
 
-        NeedsItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Needs.Select(i => new InventoryItemViewModel(i, InventoryBucket.Needs)));
-        WantsItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Wants.Select(i => new InventoryItemViewModel(i, InventoryBucket.Wants)));
-        HasItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Has.Select(i => new InventoryItemViewModel(i, InventoryBucket.Has)));
+        AllNeedsItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Needs.Select(i => new InventoryItemViewModel(i, InventoryBucket.Needs)));
+        AllWantsItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Wants.Select(i => new InventoryItemViewModel(i, InventoryBucket.Wants)));
+        AllHasItems = new ObservableCollection<InventoryItemViewModel>(_stateService.State.Has.Select(i => new InventoryItemViewModel(i, InventoryBucket.Has)));
+
+        NeedsItems = new ObservableCollection<InventoryItemViewModel>(AllNeedsItems);
+        WantsItems = new ObservableCollection<InventoryItemViewModel>(AllWantsItems);
+        HasItems = new ObservableCollection<InventoryItemViewModel>(AllHasItems);
     }
+
+    public ObservableCollection<InventoryItemViewModel> AllNeedsItems { get; }
+
+    public ObservableCollection<InventoryItemViewModel> AllWantsItems { get; }
+
+    public ObservableCollection<InventoryItemViewModel> AllHasItems { get; }
 
     public ObservableCollection<InventoryItemViewModel> NeedsItems { get; }
 
@@ -145,16 +155,19 @@ public sealed partial class InventoryViewModel : ViewModelBase
         }
 
         fromList.Remove(model);
+        model.Bucket = toBucket;
         GetStateList(toBucket).Add(model);
 
-        var fromCollection = GetCollection(fromBucket);
-        var fromVm = fromCollection.FirstOrDefault(i => i.Id == itemId);
-        if (fromVm is not null)
-        {
-            fromCollection.Remove(fromVm);
-        }
+        var fromAllCollection = GetAllCollection(fromBucket);
+        var itemVm = fromAllCollection.FirstOrDefault(i => i.Id == itemId) ?? new InventoryItemViewModel(model, toBucket);
 
-        GetCollection(toBucket).Add(new InventoryItemViewModel(model, toBucket));
+        fromAllCollection.Remove(itemVm);
+        GetCollection(fromBucket).Remove(itemVm);
+
+        itemVm.Bucket = toBucket;
+        itemVm.PhotoData = model.PhotoData;
+        AddToAllCollection(toBucket, itemVm);
+        AddToVisibleCollection(toBucket, itemVm);
         Persist();
     }
 
@@ -194,6 +207,7 @@ public sealed partial class InventoryViewModel : ViewModelBase
             stateList.Remove(model);
         }
 
+        GetAllCollection(item.Bucket).Remove(item);
         GetCollection(item.Bucket).Remove(item);
         Persist();
     }
@@ -205,54 +219,23 @@ public sealed partial class InventoryViewModel : ViewModelBase
         {
             return;
         }
-        
+
         item.PhotoData = null;
+        Persist();
     }
 
     [RelayCommand]
     private void Search(string? query)
     {
+        SearchQuery = query ?? string.Empty;
+
         if (string.IsNullOrWhiteSpace(query))
         {
             RefreshAllItems();
             return;
         }
 
-        var lowerQuery = query.ToLower();
-        var allItems = new List<InventoryItemViewModel>();
-
-        foreach (var item in _stateService.State.Needs)
-        {
-            if (item.Name.ToLower().Contains(lowerQuery))
-            {
-                allItems.Add(new InventoryItemViewModel(item, InventoryBucket.Needs));
-            }
-        }
-
-        foreach (var item in _stateService.State.Wants)
-        {
-            if (item.Name.ToLower().Contains(lowerQuery))
-            {
-                allItems.Add(new InventoryItemViewModel(item, InventoryBucket.Wants));
-            }
-        }
-
-        foreach (var item in _stateService.State.Has)
-        {
-            if (item.Name.ToLower().Contains(lowerQuery))
-            {
-                allItems.Add(new InventoryItemViewModel(item, InventoryBucket.Has));
-            }
-        }
-
-        NeedsItems.Clear();
-        WantsItems.Clear();
-        HasItems.Clear();
-
-        foreach (var item in allItems)
-        {
-            GetCollection(item.Bucket).Add(item);
-        }
+        ApplySearch(query);
     }
 
     [RelayCommand]
@@ -300,19 +283,48 @@ public sealed partial class InventoryViewModel : ViewModelBase
         WantsItems.Clear();
         HasItems.Clear();
 
-        foreach (var item in _stateService.State.Needs)
+        foreach (var item in AllNeedsItems)
         {
-            NeedsItems.Add(new InventoryItemViewModel(item, InventoryBucket.Needs));
+            NeedsItems.Add(item);
         }
 
-        foreach (var item in _stateService.State.Wants)
+        foreach (var item in AllWantsItems)
         {
-            WantsItems.Add(new InventoryItemViewModel(item, InventoryBucket.Wants));
+            WantsItems.Add(item);
         }
 
-        foreach (var item in _stateService.State.Has)
+        foreach (var item in AllHasItems)
         {
-            HasItems.Add(new InventoryItemViewModel(item, InventoryBucket.Has));
+            HasItems.Add(item);
+        }
+    }
+
+    private void ApplySearch(string? query)
+    {
+        NeedsItems.Clear();
+        WantsItems.Clear();
+        HasItems.Clear();
+
+        var lowerQuery = query?.Trim();
+        if (string.IsNullOrWhiteSpace(lowerQuery))
+        {
+            RefreshAllItems();
+            return;
+        }
+
+        AddFilteredItems(AllNeedsItems, NeedsItems, lowerQuery);
+        AddFilteredItems(AllWantsItems, WantsItems, lowerQuery);
+        AddFilteredItems(AllHasItems, HasItems, lowerQuery);
+    }
+
+    private static void AddFilteredItems(IEnumerable<InventoryItemViewModel> source, ObservableCollection<InventoryItemViewModel> target, string query)
+    {
+        foreach (var item in source)
+        {
+            if (item.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            {
+                target.Add(item);
+            }
         }
     }
 
@@ -343,6 +355,35 @@ public sealed partial class InventoryViewModel : ViewModelBase
             InventoryBucket.Wants => WantsItems,
             _ => HasItems
         };
+    }
+
+    private ObservableCollection<InventoryItemViewModel> GetAllCollection(InventoryBucket bucket)
+    {
+        return bucket switch
+        {
+            InventoryBucket.Needs => AllNeedsItems,
+            InventoryBucket.Wants => AllWantsItems,
+            _ => AllHasItems
+        };
+    }
+
+    private void AddToAllCollection(InventoryBucket bucket, InventoryItemViewModel item)
+    {
+        GetAllCollection(bucket).Add(item);
+    }
+
+    private void AddToVisibleCollection(InventoryBucket bucket, InventoryItemViewModel item)
+    {
+        if (string.IsNullOrWhiteSpace(SearchQuery))
+        {
+            GetCollection(bucket).Add(item);
+            return;
+        }
+
+        if (item.Name.Contains(SearchQuery.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            GetCollection(bucket).Add(item);
+        }
     }
 
     private List<InventoryItem> GetStateList(InventoryBucket bucket)

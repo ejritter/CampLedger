@@ -9,11 +9,17 @@ public partial class InventoryPage : ContentPage
 {
     private const string DragItemIdKey = "DragItemId";
     private const string DragBucketKey = "DragBucket";
+    private CancellationTokenSource? _searchDebounceCts;
 
     public InventoryPage()
+        : this(ServiceHelper.GetService<InventoryViewModel>())
+    {
+    }
+
+    public InventoryPage(InventoryViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = ServiceHelper.GetService<InventoryViewModel>();
+        BindingContext = viewModel;
     }
 
     private InventoryViewModel ViewModel
@@ -28,8 +34,35 @@ public partial class InventoryPage : ContentPage
     {
         if (string.IsNullOrWhiteSpace(e.NewTextValue))
         {
+            _searchDebounceCts?.Cancel();
             ViewModel.SearchCommand.Execute(string.Empty);
+            return;
         }
+
+        _searchDebounceCts?.Cancel();
+        _searchDebounceCts = new CancellationTokenSource();
+        var cancellationToken = _searchDebounceCts.Token;
+
+        _ = DebounceSearchAsync(e.NewTextValue, cancellationToken);
+    }
+
+    private async Task DebounceSearchAsync(string query, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(250, cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        ViewModel.SearchCommand.Execute(query);
     }
 
     private void OnClearSearchClicked(object? sender, EventArgs e)

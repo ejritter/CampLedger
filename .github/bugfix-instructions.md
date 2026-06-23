@@ -1,6 +1,9 @@
 ## bug fixes
 - do not modify any code outside of direct bug fixes
+- Please fix all bugs listed in `bugs`
+- use copilot skill `C:\Users\roija\.copilot\skills\maui-mvvm-development`
+- use copilot skill `C:\Users\roija\.copilot\skills\test-driven-development-maui`
 
 ## bugs
-- `TripLedger.xaml` page has a visual bug. when adding a location it makes the button very large. it should not adjust the size of the button.
-	-	Text="{Binding CurrentTripLocation.LocationName, StringFormat='Location: {0}'}"
+- Dragging items from `Needs` to `Wants` isn't moving the actual item between list. It's creating a new item.
+- Items should be able to drag between `Needs` `Wants` and `Has`

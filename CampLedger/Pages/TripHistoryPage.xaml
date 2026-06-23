@@ -5,15 +5,15 @@
              x:Class="CampLedger.Pages.TripHistoryPage"
              x:DataType="viewModels:TripHistoryViewModel"
              Title="Trip History"
-             BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark={StaticResource Gray900}}">
+              Style="{StaticResource PageStyle}">
 
     <Grid>
         <ScrollView IsVisible="{Binding IsListVisible}">
             <VerticalStackLayout Padding="16" Spacing="12">
 
-                <Border Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}" StrokeThickness="2" Stroke="{StaticResource PrimaryLight}" StrokeShape="RoundRectangle 16">
+                <Border Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource BorderColor}" StrokeShape="RoundRectangle 16">
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Filter by Date Range" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource Primary}" />
+                        <Label Text="Filter by Date Range" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource PrimaryColor}" />
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="6">
                             <Label Grid.Row="0" Grid.Column="0" Text="From:" VerticalOptions="Center" Style="{StaticResource EmphasisLabel}" />
                             <DatePicker Grid.Row="0" Grid.Column="1" Date="{Binding FilterStartDate}" />
@@ -21,34 +21,34 @@
                             <DatePicker Grid.Row="1" Grid.Column="1" Date="{Binding FilterEndDate}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                            <Button Text="Apply Filter" Command="{Binding ApplyFilterCommand}" BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource White}" />
-                            <Button Grid.Column="1" Text="Show All" Command="{Binding ClearFilterCommand}" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}" />
+                            <Button Text="Apply Filter" Command="{Binding ApplyFilterCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
+                            <Button Grid.Column="1" Text="Show All" Command="{Binding ClearFilterCommand}" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
 
-                <Button Text="Refresh" Command="{Binding RefreshCommand}" HorizontalOptions="Start" BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource White}" />
+                <Button Text="Refresh" Command="{Binding RefreshCommand}" HorizontalOptions="Start" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
 
                 <CollectionView ItemsSource="{Binding FilteredTrips}" SelectionMode="None">
                     <CollectionView.EmptyView>
-                        <Label Text="No trips found for the selected range." FontAttributes="Italic" TextColor="{StaticResource Gray500}" HorizontalTextAlignment="Center" VerticalOptions="FillAndExpand" />
+                        <Label Text="No trips found for the selected range." FontAttributes="Italic" TextColor="{DynamicResource TertiaryTextColor}" HorizontalTextAlignment="Center" VerticalOptions="Fill" />
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:TripRecordViewModel">
-                            <Border Padding="12" Margin="0,0,0,10" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}" StrokeThickness="2" Stroke="{StaticResource PrimaryLight}" StrokeShape="RoundRectangle 16">
+                            <Border Padding="12" Margin="0,0,0,10" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource BorderColor}" StrokeShape="RoundRectangle 16">
                                 <VerticalStackLayout Spacing="8">
                                     <Button Text="Edit" 
                                             FontSize="12" 
                                             Padding="8,4"
                                             HorizontalOptions="Start"
-                                            BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource White}"
+                                            BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=BeginEditTripDetailsCommand}"
                                             CommandParameter="{Binding .}"
                                             IsVisible="{Binding IsNotEditingTripDetails}" />
-                                    <Label Text="{Binding TripDurationText, StringFormat='Trip Duration: {0}'}" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource Primary}" IsVisible="{Binding IsNotEditingTripDetails}" />
+                                    <Label Text="{Binding TripDurationText, StringFormat='Trip Duration: {0}'}" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource PrimaryColor}" IsVisible="{Binding IsNotEditingTripDetails}" />
 
                                     <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditingTripDetails}">
-                                        <Label Text="Trip Duration:" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource Primary}" />
+                                        <Label Text="Trip Duration:" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource PrimaryColor}" />
                                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="6">
                                             <Label Grid.Row="0" Grid.Column="0" Text="Start:" VerticalOptions="Center" Style="{StaticResource EmphasisLabel}" />
                                             <DatePicker Grid.Row="0" Grid.Column="1" Date="{Binding EditingStartDate}" />
@@ -64,8 +64,8 @@
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=OpenOrEditLocationCommand}"
                                             CommandParameter="{Binding .}"
                                             IsEnabled="{Binding HasLocation}"
-                                            BackgroundColor="{StaticResource Primary}"
-                                            TextColor="{StaticResource White}"
+                                            BackgroundColor="{DynamicResource PrimaryColor}"
+                                            TextColor="White"
                                             FontSize="12"
                                             Padding="8,4"
                                             HorizontalOptions="Start" />
@@ -77,30 +77,30 @@
                                             <Button Text="Change Location"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=EditTripLocationCommand}"
                                                     CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource Primary}"
-                                                    TextColor="{StaticResource White}"
+                                                    BackgroundColor="{DynamicResource PrimaryColor}"
+                                                    TextColor="White"
                                                     FontSize="12"
                                                     Padding="8,4"
-                                                    HorizontalOptions="FillAndExpand" />
+                                                    HorizontalOptions="Fill" />
                                             <Button Text="Clear"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=ClearEditingTripLocationCommand}"
                                                     CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource Gray400}"
-                                                    TextColor="{StaticResource White}"
+                                                    BackgroundColor="{DynamicResource TertiaryTextColor}"
+                                                    TextColor="White"
                                                     FontSize="12"
                                                     Padding="8,4"
-                                                    HorizontalOptions="FillAndExpand" />
+                                                    HorizontalOptions="Fill" />
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
-                                    <BoxView HeightRequest="1" BackgroundColor="{StaticResource PrimaryLight}" />
+                                    <BoxView HeightRequest="1" BackgroundColor="{DynamicResource BorderColor}" />
 
                                     <Grid ColumnDefinitions="*" ColumnSpacing="8">
                                         <Label Grid.Column="0" Text="Notes:" Style="{StaticResource EmphasisLabel}" FontSize="12" VerticalOptions="Center" />
 
                                     </Grid>
 
-                                    <Label Text="{Binding Notes}" FontSize="13" LineBreakMode="WordWrap" TextColor="{StaticResource Gray600}"
+                                    <Label Text="{Binding Notes}" FontSize="13" LineBreakMode="WordWrap" TextColor="{DynamicResource SecondaryTextColor}"
                                            IsVisible="{Binding IsNotEditingTripDetails}" />
 
                                     <!-- When editing trip details, notes become editable and are saved/cancelled as part of Save Trip / Cancel Edit -->
@@ -128,46 +128,27 @@
 
                                     <VerticalStackLayout Spacing="4">
                                         <Label Text="Summary:" FontAttributes="Bold" FontSize="12" Style="{StaticResource EmphasisLabel}" />
-                                        <Label Text="{Binding PackedCount, StringFormat='✓ Packed: {0} items'}" FontSize="13" TextColor="{StaticResource Success}" />
-                                        <Label Text="{Binding ForgottenCount, StringFormat='✗ Forgotten: {0} items'}" FontSize="13" TextColor="{StaticResource Danger}" />
+                                        <Label Text="{Binding PackedCount, StringFormat='✓ Packed: {0} items'}" FontSize="13" TextColor="{DynamicResource SuccessColor}" />
+                                        <Label Text="{Binding ForgottenCount, StringFormat='✗ Forgotten: {0} items'}" FontSize="13" TextColor="{DynamicResource ErrorColor}" />
                                     </VerticalStackLayout>
 
-                                    <Label Text="Packed:" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource Success}" />
-                                    <Label Text="{Binding PackedItems}" FontSize="12" LineBreakMode="WordWrap" TextColor="{StaticResource Gray600}" />
+                                    <Label Text="Packed:" FontAttributes="Bold" FontSize="12" TextColor="{DynamicResource SuccessColor}" />
+                                    <Label Text="{Binding PackedItems}" FontSize="12" LineBreakMode="WordWrap" TextColor="{DynamicResource SecondaryTextColor}" />
 
-                                    <Label Text="Forgotten:" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource Danger}" />
-                                    <Label Text="{Binding ForgottenItems}" FontSize="12" LineBreakMode="WordWrap" TextColor="{StaticResource Gray600}" />
+                                    <Label Text="Forgotten:" FontAttributes="Bold" FontSize="12" TextColor="{DynamicResource ErrorColor}" />
+                                    <Label Text="{Binding ForgottenItems}" FontSize="12" LineBreakMode="WordWrap" TextColor="{DynamicResource SecondaryTextColor}" />
                                     <VerticalStackLayout Spacing="6" IsVisible="{Binding IsEditingTripDetails}">
                                         <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
-                                            <Button Grid.Column="0" Text="Save Trip" BackgroundColor="{StaticResource Success}" TextColor="{StaticResource White}"
+                                            <Button Grid.Column="0" Text="Save Trip" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White"
                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=SaveTripDetailsCommand}"
                                                    CommandParameter="{Binding .}" />
-                                            <Button Grid.Column="1" Text="Delete Trip" BackgroundColor="{StaticResource Danger}" TextColor="{StaticResource White}" Padding="8,4"
+                                            <Button Grid.Column="1" Text="Delete Trip" BackgroundColor="{DynamicResource ErrorColor}" TextColor="White" Padding="8,4"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=DeleteTripCommand}"
                                                     CommandParameter="{Binding .}" />
-                                            <Button Grid.Column="2" Text="Cancel Edit" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}"
+                                            <Button Grid.Column="2" Text="Cancel Edit" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White"
                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=CancelEditTripDetailsCommand}"
                                                    CommandParameter="{Binding .}" />
                                         </Grid>
-                                    </VerticalStackLayout>
-                                    <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhotoItems}">
-                                        <Label Text="Item Photos:" FontAttributes="Bold" FontSize="12" Style="{StaticResource EmphasisLabel}" />
-                                        <CollectionView ItemsSource="{Binding PhotoItems}" SelectionMode="None">
-                                            <CollectionView.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Padding="8" Margin="0,2" BackgroundColor="{StaticResource PrimaryPale}" StrokeThickness="0" StrokeShape="RoundRectangle 10">
-                                                        <VerticalStackLayout Spacing="4">
-                                                            <Label Text="{Binding Name}" FontSize="12" FontAttributes="Bold" Style="{StaticResource EmphasisLabel}" />
-                                                            <Image Source="{Binding PhotoSource}" Aspect="AspectFit" HeightRequest="150" WidthRequest="150" HorizontalOptions="Start">
-                                                                <Image.GestureRecognizers>
-                                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
-                                                                </Image.GestureRecognizers>
-                                                            </Image>
-                                                        </VerticalStackLayout>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </CollectionView.ItemTemplate>
-                                        </CollectionView>
                                     </VerticalStackLayout>
                                 </VerticalStackLayout>
                             </Border>
@@ -178,12 +159,12 @@
         </ScrollView>
 
         <!-- Full-screen single-trip editor overlay -->
-        <Grid BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" IsVisible="{Binding IsEditingTripInFullScreen}" Padding="16">
+        <Grid BackgroundColor="{DynamicResource SurfaceColor}" IsVisible="{Binding IsEditingTripInFullScreen}" Padding="16">
             <ScrollView>
                 <VerticalStackLayout BindingContext="{Binding EditingTrip}" x:DataType="viewModels:TripRecordViewModel" Spacing="12">
-                    <Label Text="Edit Trip" FontAttributes="Bold" FontSize="20" TextColor="{StaticResource Primary}" />
+                    <Label Text="Edit Trip" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" />
 
-                    <Label Text="Trip Duration:" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource Primary}" />
+                    <Label Text="Trip Duration:" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource PrimaryColor}" />
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="6">
                         <Label Grid.Row="0" Grid.Column="0" Text="Start:" VerticalOptions="Center" Style="{StaticResource EmphasisLabel}" />
                         <DatePicker Grid.Row="0" Grid.Column="1" Date="{Binding EditingStartDate}" />
@@ -200,13 +181,13 @@
                         <Button Text="Change Location"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=EditTripLocationCommand}"
                                 CommandParameter="{Binding .}"
-                                BackgroundColor="{StaticResource Primary}"
-                                TextColor="{StaticResource White}" />
+                                BackgroundColor="{DynamicResource PrimaryColor}"
+                                TextColor="White" />
                         <Button Text="Clear"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=ClearEditingTripLocationCommand}"
                                 CommandParameter="{Binding .}"
-                                BackgroundColor="{StaticResource Gray400}"
-                                TextColor="{StaticResource White}" />
+                                BackgroundColor="{DynamicResource TertiaryTextColor}"
+                                TextColor="White" />
                     </HorizontalStackLayout>
 
                     <Label Text="Checklist:" FontAttributes="Bold" FontSize="14" Style="{StaticResource EmphasisLabel}" />
@@ -222,13 +203,13 @@
                     </CollectionView>
 
                     <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
-                        <Button Text="Save Trip" BackgroundColor="{StaticResource Success}" TextColor="{StaticResource White}"
+                        <Button Text="Save Trip" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White"
                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=SaveTripDetailsCommand}"
                                CommandParameter="{Binding .}" />
-                        <Button Grid.Column="1" Text="Delete Trip" BackgroundColor="{StaticResource Danger}" TextColor="{StaticResource White}"
+                        <Button Grid.Column="1" Text="Delete Trip" BackgroundColor="{DynamicResource ErrorColor}" TextColor="White"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=DeleteTripCommand}"
                                 CommandParameter="{Binding .}" />
-                        <Button Grid.Column="2" Text="Cancel Edit" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}"
+                        <Button Grid.Column="2" Text="Cancel Edit" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White"
                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripHistoryViewModel}}, Path=CancelEditTripDetailsCommand}"
                                CommandParameter="{Binding .}" />
                     </Grid>
@@ -236,16 +217,6 @@
             </ScrollView>
         </Grid>
 
-        <Grid BackgroundColor="#CC000000" IsVisible="{Binding IsPhotoPreviewVisible}" Padding="20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Button Grid.Row="0" Text="Close" Command="{Binding ClosePhotoPreviewCommand}" BackgroundColor="{StaticResource Gray500}" TextColor="{StaticResource White}" HorizontalOptions="End" />
-            <Border Grid.Row="1" Padding="8" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}" StrokeThickness="0" StrokeShape="RoundRectangle 12" VerticalOptions="Center" HorizontalOptions="Center">
-                <Image Source="{Binding PhotoPreviewSource}" Aspect="AspectFit" HeightRequest="500" WidthRequest="500" />
-            </Border>
-        </Grid>
     </Grid>
 
 </ContentPage>

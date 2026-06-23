@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="CampLedger.Resources.Styles.Themes.RegalEarthTheme">
+
+    <x:String x:Key="ThemeName">Regal Earth</x:String>
+
+    <Color x:Key="PageBackgroundColor">#F4E9D8</Color>
+    <Color x:Key="NavigationBarColor">#4B1D6B</Color>
+    <Color x:Key="PrimaryColor">#4B1D6B</Color>
+    <Color x:Key="AccentColor">#C89B3C</Color>
+    <Color x:Key="SurfaceColor">#FFF9F0</Color>
+    <Color x:Key="SurfaceAltColor">#E7D3B0</Color>
+    <Color x:Key="BorderColor">#C8B99A</Color>
+    <Color x:Key="PrimaryTextColor">#1E1E1E</Color>
+    <Color x:Key="SecondaryTextColor">#4A4038</Color>
+    <Color x:Key="TertiaryTextColor">#7A7067</Color>
+    <Color x:Key="SuccessColor">#1F5E3B</Color>
+    <Color x:Key="WarningColor">#9A5A00</Color>
+    <Color x:Key="ErrorColor">#8E1B2D</Color>
+    <Color x:Key="InfoColor">#006D77</Color>
+    <Color x:Key="DecorativeColor">#C7B7E8</Color>
+    <Color x:Key="TransparentColor">Transparent</Color>
+
+</ResourceDictionary>

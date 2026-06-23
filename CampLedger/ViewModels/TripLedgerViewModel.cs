@@ -11,6 +11,7 @@ public sealed partial class TripLedgerViewModel : ViewModelBase
 {
     private readonly ICampLedgerStateService _stateService;
     private readonly IToastNotificationService _toastService;
+    private readonly ITripDurationValidationService _tripDurationValidationService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UnpackedCount))]
@@ -73,15 +74,16 @@ public sealed partial class TripLedgerViewModel : ViewModelBase
         }
     }
 
-    public TripLedgerViewModel(ICampLedgerStateService stateService, IToastNotificationService toastService)
+    public TripLedgerViewModel(ICampLedgerStateService stateService, IToastNotificationService toastService, ITripDurationValidationService tripDurationValidationService)
     {
         _stateService = stateService;
         _toastService = toastService;
-        ChecklistItems = [];
-        PackedChecklistItems = [];
-        UnpackedChecklistItems = [];
-        FilteredPackedChecklistItems = [];
-        FilteredUnpackedChecklistItems = [];
+        _tripDurationValidationService = tripDurationValidationService;
+        ChecklistItems = new System.Collections.ObjectModel.ObservableCollection<TripChecklistItemViewModel>();
+        PackedChecklistItems = new System.Collections.ObjectModel.ObservableCollection<TripChecklistItemViewModel>();
+        UnpackedChecklistItems = new System.Collections.ObjectModel.ObservableCollection<TripChecklistItemViewModel>();
+        FilteredPackedChecklistItems = new System.Collections.ObjectModel.ObservableCollection<TripChecklistItemViewModel>();
+        FilteredUnpackedChecklistItems = new System.Collections.ObjectModel.ObservableCollection<TripChecklistItemViewModel>();
 
         LoadFromState();
     }
@@ -414,15 +416,12 @@ public sealed partial class TripLedgerViewModel : ViewModelBase
 
     private async Task<bool> ValidateTripDurationAsync()
     {
-        if (StartDate.Date != EndDate.Date)
+        if (_tripDurationValidationService.IsValid(StartDate, EndDate))
         {
             return true;
         }
 
-        await Shell.Current.DisplayAlertAsync(
-            "Trip Duration Required",
-            "This app is not intended for same day trips. Please plan for at least one night.",
-            "OK");
+        await _toastService.ShowAsync(_tripDurationValidationService.GetValidationMessage());
 
         return false;
     }

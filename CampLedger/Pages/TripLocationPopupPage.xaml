@@ -7,21 +7,21 @@
                x:DataType="viewModels:TripLocationPopupViewModel"
                CanBeDismissedByTappingOutsideOfPopup="False">
 
-    <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+    <Border BackgroundColor="{DynamicResource SurfaceColor}"
             HeightRequest="{Binding PopupHeight}"
             WidthRequest="{Binding PopupWidth}"
             MaximumHeightRequest="{Binding PopupHeight}"
             MaximumWidthRequest="{Binding PopupWidth}"
             MinimumHeightRequest="360"
             MinimumWidthRequest="320"
-            Stroke="{StaticResource PrimaryLight}"
+            Stroke="{DynamicResource BorderColor}"
             StrokeShape="RoundRectangle 16"
             StrokeThickness="2">
         <Grid HeightRequest="{Binding PopupHeight}" RowDefinitions="Auto,*,Auto" RowSpacing="0" WidthRequest="{Binding PopupWidth}">
-            <Border Grid.Row="0" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" StrokeThickness="0">
+            <Border Grid.Row="0" Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="0">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Browse Google Maps" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" />
-                    <Label Text="Search where you are camping. Press Confirm to save." FontAttributes="Italic" FontSize="14" TextColor="{StaticResource Gray500}" />
+                    <Label Text="Browse Google Maps" FontAttributes="Bold" FontSize="18" TextColor="{DynamicResource PrimaryColor}" />
+                    <Label Text="Search where you are camping. Press Confirm to save." FontAttributes="Italic" FontSize="14" TextColor="{DynamicResource TertiaryTextColor}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -35,20 +35,20 @@
                          Grid.Row="0" />
             </Grid>
 
-            <Border Grid.Row="2" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" Stroke="{StaticResource Gray400}" StrokeThickness="1">
+            <Border Grid.Row="2" Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" Stroke="{DynamicResource BorderColor}" StrokeThickness="1">
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Button Grid.Column="0"
                             Text="{Binding LocationButtonText}"
                             Clicked="OnConfirmLocationClicked"
-                            BackgroundColor="{StaticResource Success}"
-                            TextColor="{StaticResource White}"
+                            BackgroundColor="{DynamicResource SuccessColor}"
+                            TextColor="White"
                             Padding="18,12"
                             FontSize="16" />
                     <Button Grid.Column="1"
                             Text="Cancel"
                             Clicked="OnCancelClicked"
-                            BackgroundColor="{StaticResource Gray400}"
-                            TextColor="{StaticResource White}"
+                            BackgroundColor="{DynamicResource TertiaryTextColor}"
+                            TextColor="White"
                             Padding="18,12"
                             FontSize="16" />
                 </Grid>

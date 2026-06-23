@@ -11,6 +11,7 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 		<ApplicationTitle>CampLedger</ApplicationTitle>
 		<ApplicationId>EJRitterDevelopment.campledger</ApplicationId>
@@ -35,10 +36,10 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="14.1.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="14.2.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.60" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.71" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -54,6 +55,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="AppShell.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\ThemeSelectionPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\ThemeSelectionPopup.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\ThemeSettingsPage.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Pages\TripHistoryPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
@@ -63,6 +76,12 @@
 	  <MauiXaml Update="Pages\TripLocationPopupPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Colors.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Styles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -70,5 +89,19 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
 	</ItemGroup>
+
+	<Target Name="CopyCopilotInstructionMarkdownFiles" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
+	  <PropertyGroup>
+		<CopilotInstructionsDestinationRoot>C:\Users\roija\OneDrive\Documents\Copilot-Instructions\$(RootNamespace)\</CopilotInstructionsDestinationRoot>
+	  </PropertyGroup>
+
+	  <MakeDir Directories="$(CopilotInstructionsDestinationRoot)" />
+
+	  <ItemGroup>
+		<CopilotInstructionMarkdownFiles Include="$(MSBuildProjectDirectory)\..\.github\**\*.md" />
+	  </ItemGroup>
+
+	  <Copy SourceFiles="@(CopilotInstructionMarkdownFiles)" DestinationFiles="@(CopilotInstructionMarkdownFiles->'$(CopilotInstructionsDestinationRoot)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>
