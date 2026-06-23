@@ -10,6 +10,7 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
 {
     private readonly ICampLedgerStateService _stateService;
     private readonly IToastNotificationService _toastService;
+    private readonly ITripDurationValidationService _tripDurationValidationService;
 
     [ObservableProperty]
     public partial DateTime FilterStartDate { get; set; } = DateTime.Today.AddMonths(-1);
@@ -35,10 +36,11 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsListVisible { get; set; } = true;
 
-    public TripHistoryViewModel(ICampLedgerStateService stateService, IToastNotificationService toastService)
+    public TripHistoryViewModel(ICampLedgerStateService stateService, IToastNotificationService toastService, ITripDurationValidationService tripDurationValidationService)
     {
         _stateService = stateService;
         _toastService = toastService;
+        _tripDurationValidationService = tripDurationValidationService;
         Trips = [];
         FilteredTrips = [];
         Refresh();
@@ -129,9 +131,9 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
             return;
         }
 
-        if (record.EditingEndDate.Date <= record.EditingStartDate.Date)
+        if (!_tripDurationValidationService.IsValid(record.EditingStartDate, record.EditingEndDate))
         {
-            await _toastService.ShowAsync("This app is not intended for same day trips. Please plan for at least one night.");
+            await _toastService.ShowAsync(_tripDurationValidationService.GetValidationMessage());
             return;
         }
 

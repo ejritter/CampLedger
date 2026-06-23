@@ -11,7 +11,7 @@ public partial class TripHistoryPage : ContentPage
     private bool _suppressRefreshOnAppearing;
 
     public TripHistoryPage()
-        : this(ServiceHelper.GetService<TripHistoryViewModel>())
+        : this(CreateViewModel())
     {
     }
 
@@ -20,6 +20,22 @@ public partial class TripHistoryPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private static TripHistoryViewModel CreateViewModel()
+    {
+        try
+        {
+            return ServiceHelper.GetService<TripHistoryViewModel>();
+        }
+        catch
+        {
+            var storageService = new CampLedgerStorageService();
+            var stateService = new CampLedgerStateService(storageService);
+            var toastService = new ToastNotificationService();
+            var validationService = new TripDurationValidationService();
+            return new TripHistoryViewModel(stateService, toastService, validationService);
+        }
     }
 
     private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)

@@ -66,10 +66,11 @@ The application must:
 
 The application must:
 
-- Use MAUI Preferences for all local data persistence.
+- Use SQLite for local data persistence via sqlite-net-pcl.
 - Store list contents for Needs, Wants, and Has.
 - Store trip planning data.
 - Store completed trip history.
+- Keep the database file in the MAUI app data directory for cross-platform compatibility.
 
 ## Trip Planning System
 

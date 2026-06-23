@@ -12,7 +12,7 @@ public partial class InventoryPage : ContentPage
     private CancellationTokenSource? _searchDebounceCts;
 
     public InventoryPage()
-        : this(ServiceHelper.GetService<InventoryViewModel>())
+        : this(CreateViewModel())
     {
     }
 
@@ -20,6 +20,20 @@ public partial class InventoryPage : ContentPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+    }
+
+    private static InventoryViewModel CreateViewModel()
+    {
+        try
+        {
+            return ServiceHelper.GetService<InventoryViewModel>();
+        }
+        catch
+        {
+            var storageService = new CampLedgerStorageService();
+            var stateService = new CampLedgerStateService(storageService);
+            return new InventoryViewModel(stateService);
+        }
     }
 
     private InventoryViewModel ViewModel

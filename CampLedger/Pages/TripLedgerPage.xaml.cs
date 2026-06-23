@@ -12,7 +12,7 @@ public partial class TripLedgerPage : ContentPage
     private bool _suppressRefreshOnAppearing;
 
     public TripLedgerPage()
-        : this(ServiceHelper.GetService<TripLedgerViewModel>())
+        : this(CreateViewModel())
     {
     }
 
@@ -21,6 +21,22 @@ public partial class TripLedgerPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private static TripLedgerViewModel CreateViewModel()
+    {
+        try
+        {
+            return ServiceHelper.GetService<TripLedgerViewModel>();
+        }
+        catch
+        {
+            var storageService = new CampLedgerStorageService();
+            var stateService = new CampLedgerStateService(storageService);
+            var toastService = new ToastNotificationService();
+            var validationService = new TripDurationValidationService();
+            return new TripLedgerViewModel(stateService, toastService, validationService);
+        }
     }
 
     private TripLedgerViewModel ViewModel => (TripLedgerViewModel)BindingContext;

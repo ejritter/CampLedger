@@ -23,6 +23,16 @@
   <ItemGroup>
     <Compile Include="..\..\CampLedger\Services\ITripDurationValidationService.cs" Link="Services\ITripDurationValidationService.cs" />
     <Compile Include="..\..\CampLedger\Services\TripDurationValidationService.cs" Link="Services\TripDurationValidationService.cs" />
+    <Compile Include="..\..\CampLedger\Services\ICampLedgerStorageService.cs" Link="Services\ICampLedgerStorageService.cs" />
+    <Compile Include="..\..\CampLedger\Services\ICampLedgerStateService.cs" Link="Services\ICampLedgerStateService.cs" />
+    <Compile Include="..\..\CampLedger\Services\CampLedgerStateService.cs" Link="Services\CampLedgerStateService.cs" />
+    <Compile Include="..\..\CampLedger\Services\CampLedgerStorageService.cs" Link="Services\CampLedgerStorageService.cs" />
+    <Compile Include="..\..\CampLedger\Models\CampLedgerState.cs" Link="Models\CampLedgerState.cs" />
+    <Compile Include="..\..\CampLedger\Models\InventoryBucket.cs" Link="Models\InventoryBucket.cs" />
+    <Compile Include="..\..\CampLedger\Models\InventoryItem.cs" Link="Models\InventoryItem.cs" />
+    <Compile Include="..\..\CampLedger\Models\TripChecklistItem.cs" Link="Models\TripChecklistItem.cs" />
+    <Compile Include="..\..\CampLedger\Models\TripLocation.cs" Link="Models\TripLocation.cs" />
+    <Compile Include="..\..\CampLedger\Models\TripRecord.cs" Link="Models\TripRecord.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +41,11 @@
     <Compile Remove="UnitTest1.cs" />
     <Compile Remove="TestDoubles\InMemoryPreferences.cs" />
     <Compile Remove="TestDoubles\RecordingThemeService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
   </ItemGroup>
 
 </Project>
