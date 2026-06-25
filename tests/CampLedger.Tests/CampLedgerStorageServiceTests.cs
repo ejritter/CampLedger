@@ -106,6 +106,76 @@ public sealed class CampLedgerStorageServiceTests
         File.Delete(databasePath);
     }
 
+    [Fact]
+    public async Task Load_WhenPreferencesPayloadUsesLegacyEnvelope_MigratesIntoSqlite()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var preferences = new InMemoryPreferences();
+        var legacyPayload = new
+        {
+            inventory = new
+            {
+                needs = new[]
+                {
+                    new { name = "Tent", bucket = 0 }
+                },
+                wants = Array.Empty<object>(),
+                has = Array.Empty<object>()
+            },
+            currentTrip = new
+            {
+                notes = "Pack early",
+                items = new[]
+                {
+                    new { name = "Tent", isPacked = false }
+                }
+            },
+            tripHistory = Array.Empty<object>()
+        };
+
+        preferences.Set("camp-ledger-state", JsonSerializer.Serialize(legacyPayload), null);
+
+        var sut = new CampLedgerStorageService(databasePath, preferences);
+        var reloaded = sut.Load();
+
+        await sut.CloseConnectionAsync();
+
+        Assert.Single(reloaded.Needs);
+        Assert.Equal("Tent", reloaded.Needs[0].Name);
+        Assert.Equal("Pack early", reloaded.CurrentTrip.Notes);
+        Assert.Single(reloaded.CurrentTrip.Items);
+        Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
+
+        File.Delete(databasePath);
+    }
+
+    [Fact]
+    public async Task Load_WhenMigrationFlagIsSetButSqliteIsEmpty_MigratesPreferencesIntoSqlite()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var preferences = new InMemoryPreferences();
+        var state = new CampLedgerState
+        {
+            Needs =
+            [
+                new InventoryItem { Name = "Tent", Bucket = InventoryBucket.Needs }
+            ]
+        };
+
+        preferences.Set("camp-ledger-state", JsonSerializer.Serialize(state), null);
+        preferences.Set("camp-ledger-sqlite-migrated", true, null);
+
+        var sut = new CampLedgerStorageService(databasePath, preferences);
+        var reloaded = sut.Load();
+
+        await sut.CloseConnectionAsync();
+
+        Assert.Single(reloaded.Needs);
+        Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
+
+        File.Delete(databasePath);
+    }
+
     private sealed class InMemoryPreferences : IPreferences
     {
         private readonly Dictionary<string, object> _values = new(StringComparer.Ordinal);

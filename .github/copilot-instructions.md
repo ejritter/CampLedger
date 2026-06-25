@@ -72,6 +72,23 @@ The application must:
 - Store completed trip history.
 - Keep the database file in the MAUI app data directory for cross-platform compatibility.
 
+#### 4a. Backward-Compatible Migration (deployed apps)
+
+CampLedger is a deployed application. Existing installs persisted state with MAUI `Preferences` under the `camp-ledger-state` key. Storage changes must never destroy that data.
+
+- On first launch after upgrading, import the legacy `Preferences` payload into SQLite.
+- Guard the import with a migration flag (`camp-ledger-sqlite-migrated`) so it runs once, but still re-import if the flag is set while SQLite is empty.
+- Tolerate legacy payload shapes (envelope vs. flat inventory) and missing/edge-case fields.
+- Cover migration behavior with regression tests.
+
+#### 4b. Storage Access Threading (critical)
+
+SQLite access uses `SQLiteAsyncConnection` and is asynchronous. To keep startup safe:
+
+- Never block the UI thread on an async storage call (no `.Result`, `.Wait()`, or `.GetAwaiter().GetResult()` on a UI-thread call path).
+- Any synchronous-looking storage entry point that must bridge to async work has to dispatch that work to the thread pool (`Task.Run(...)` with `ConfigureAwait(false)`) so SQLite continuations never wait on the blocked UI thread.
+- Services and ViewModels constructed during `CreateWindow`/page activation must not deadlock by synchronously awaiting storage. See section 7 for the startup rule.
+
 ## Trip Planning System
 
 ### 5. Trip Planning Section
@@ -111,8 +128,17 @@ The application must:
 - Provide smooth drag-and-drop interactions.
 - Maintain a clean, modern FluentUI aesthetic.
 - Be intuitive for users familiar with checklist apps.
-- adhere to best practices for async/await coding. 
+- adhere to best practices for async/await coding.
 - not jitter or lag when taking\adding photos of items.
+
+#### 7a. Startup Must Not Deadlock (Windows desktop)
+
+A blank/missing window on Windows desktop (process runs but `MainWindowHandle` stays `0`) is almost always a sync-over-async deadlock during startup, not a Shell/window-hosting problem. To prevent it:
+
+- Do not block the UI thread on async work in `App`, `AppShell`, page, service, or ViewModel constructors invoked during `CreateWindow`/page activation.
+- Bridge any required synchronous storage load to the thread pool (`Task.Run(...)` + `ConfigureAwait(false)`) as described in section 4b.
+- Keep `AppShell` lightweight: declare flyout items and the theme footer in XAML using lazy `ContentTemplate` hosting. Do not eagerly resolve every page in the shell constructor.
+- Keep the startup trace/first-chance exception logging in place to diagnose regressions; benign caught SQLite "not an error" entries during table creation are expected and do not indicate failure.
 
 ## Summary
 
@@ -120,6 +146,7 @@ CampLedger is a structured, FluentUI-styled .NET 10 MAUI application that:
 
 - Manages camping inventory across Needs, Wants, and Has lists.
 - Supports drag-and-drop between lists.
-- Uses MAUI Preferences for all storage.
+- Persists all data in a local SQLite database (sqlite-net-pcl) in the app data directory, with one-time backward-compatible migration from the legacy MAUI Preferences state.
+- Accesses storage asynchronously without blocking the UI thread, so Windows desktop startup never deadlocks.
 - Includes a full trip-planning system.
 - Tracks and displays historical camping trips.

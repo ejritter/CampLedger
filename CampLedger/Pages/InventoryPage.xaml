@@ -5,183 +5,85 @@
              x:Class="CampLedger.Pages.InventoryPage"
              x:DataType="viewModels:InventoryViewModel"
              Title="Inventory"
-              Style="{StaticResource PageStyle}">
+             Style="{StaticResource PageStyle}">
 
-    <Grid RowDefinitions="*,Auto" ColumnDefinitions="*">
-        <ScrollView Grid.Row="0">
-            <VerticalStackLayout Padding="16" Spacing="16">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="16">
+        <Border Padding="12" StrokeShape="RoundRectangle 16" BackgroundColor="{DynamicResource SurfaceColor}">
+            <VerticalStackLayout Spacing="8">
+               <Label Text="Search inventory" FontAttributes="Bold" FontSize="18" />
+               <SearchBar x:Name="SearchBar" Placeholder="Search all items..." SearchCommand="{Binding SearchCommand}" SearchCommandParameter="{Binding Text, Source={x:Reference SearchBar}}" TextChanged="OnSearchTextChanged" />
+               <Button Text="Clear" Clicked="OnClearSearchClicked" />
+            </VerticalStackLayout>
+        </Border>
 
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <SearchBar Grid.Column="0" Placeholder="Search all items..." x:Name="SearchBar" SearchCommand="{Binding SearchCommand}" SearchCommandParameter="{Binding Text, Source={x:Reference SearchBar}}" TextChanged="OnSearchTextChanged" />
-                    <Button Grid.Column="1" Text="Clear" Clicked="OnClearSearchClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" VerticalOptions="Center" />
-                </Grid>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16">
+               <Border Padding="12" StrokeShape="RoundRectangle 16" BackgroundColor="{DynamicResource SurfaceColor}">
+                   <VerticalStackLayout Spacing="10">
+                       <Label Text="Needs" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" />
+                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                           <Entry Grid.Column="0" Placeholder="Add a needed item" Text="{Binding NewNeedsItemName}" />
+                           <Button Grid.Column="1" Text="Add" Command="{Binding AddNeedsItemCommand}" />
+                       </Grid>
+                       <CollectionView ItemsSource="{Binding NeedsItems}" SelectionMode="None">
+                           <CollectionView.ItemTemplate>
+                               <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
+                                   <Border Padding="10" Margin="0,4" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{DynamicResource SurfaceAltColor}">
+                                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                           <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                           <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" />
+                                       </Grid>
+                                   </Border>
+                               </DataTemplate>
+                           </CollectionView.ItemTemplate>
+                       </CollectionView>
+                   </VerticalStackLayout>
+               </Border>
 
-                <Border x:Name="NeedsDropZone" Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource BorderColor}" StrokeShape="RoundRectangle 16">
-                    <VerticalStackLayout Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <Label Text="Needs" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding NeedsToggleText}" Command="{Binding ToggleNeedsExpandedCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="White" FontSize="12" Padding="12,6" />
-                        </Grid>
-                        <VerticalStackLayout Spacing="10" IsVisible="{Binding IsNeedsExpanded}">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Entry Grid.Column="0" Placeholder="Add a needed item" Text="{Binding NewNeedsItemName}" />
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddNeedsItemCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
-                            </Grid>
+               <Border Padding="12" StrokeShape="RoundRectangle 16" BackgroundColor="{DynamicResource SurfaceColor}">
+                   <VerticalStackLayout Spacing="10">
+                       <Label Text="Wants" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" />
+                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                           <Entry Grid.Column="0" Placeholder="Add an optional item" Text="{Binding NewWantsItemName}" />
+                           <Button Grid.Column="1" Text="Add" Command="{Binding AddWantsItemCommand}" />
+                       </Grid>
+                       <CollectionView ItemsSource="{Binding WantsItems}" SelectionMode="None">
+                           <CollectionView.ItemTemplate>
+                               <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
+                                   <Border Padding="10" Margin="0,4" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{DynamicResource SurfaceAltColor}">
+                                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                           <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                           <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" />
+                                       </Grid>
+                                   </Border>
+                               </DataTemplate>
+                           </CollectionView.ItemTemplate>
+                       </CollectionView>
+                   </VerticalStackLayout>
+               </Border>
 
-                            <CollectionView ItemsSource="{Binding NeedsItems}" SelectionMode="None">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
-                                        <Border Padding="10" Margin="0,4" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                                                    <Label Text="{Binding Name}" VerticalOptions="Center" TextColor="{DynamicResource WarningColor}" />
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="2" Text="Edit" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding .}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="3" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                </Grid>
-                                                <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhoto}">
-                                                    <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
-                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="160" WidthRequest="160" HorizontalOptions="Start">
-                                                        <Image.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
-                                                        </Image.GestureRecognizers>
-                                                    </Image>
-                                                </VerticalStackLayout>
-                                            </VerticalStackLayout>
-                                            <Border.GestureRecognizers>
-                                                <DragGestureRecognizer DragStarting="OnItemDragStarting" />
-                                            </Border.GestureRecognizers>
-                                        </Border>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-                    <Border.GestureRecognizers>
-                        <DropGestureRecognizer AllowDrop="True" DragOver="OnNeedsDropZoneDragOver" Drop="OnNeedsDropZoneDrop" DragLeave="OnDropZoneDragLeave" />
-                    </Border.GestureRecognizers>
-                </Border>
-
-                <Border x:Name="WantsDropZone" Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource BorderColor}" StrokeShape="RoundRectangle 16">
-                    <VerticalStackLayout Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <Label Text="Wants" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding WantsToggleText}" Command="{Binding ToggleWantsExpandedCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="White" FontSize="12" Padding="12,6" />
-                        </Grid>
-                        <VerticalStackLayout Spacing="10" IsVisible="{Binding IsWantsExpanded}">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Entry Grid.Column="0" Placeholder="Add an optional item" Text="{Binding NewWantsItemName}" />
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddWantsItemCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
-                            </Grid>
-
-                            <CollectionView ItemsSource="{Binding WantsItems}" SelectionMode="None">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
-                                        <Border Padding="10" Margin="0,4" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                                                    <Label Text="{Binding Name}" VerticalOptions="Center" TextColor="{DynamicResource WarningColor}" />
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="2" Text="Edit" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding .}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="3" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                </Grid>
-                                                <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhoto}">
-                                                    <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
-                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="160" WidthRequest="160" HorizontalOptions="Start">
-                                                        <Image.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
-                                                        </Image.GestureRecognizers>
-                                                    </Image>
-                                                </VerticalStackLayout>
-                                            </VerticalStackLayout>
-                                            <Border.GestureRecognizers>
-                                                <DragGestureRecognizer DragStarting="OnItemDragStarting" />
-                                            </Border.GestureRecognizers>
-                                        </Border>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-                    <Border.GestureRecognizers>
-                        <DropGestureRecognizer AllowDrop="True" DragOver="OnWantsDropZoneDragOver" Drop="OnWantsDropZoneDrop" DragLeave="OnDropZoneDragLeave" />
-                    </Border.GestureRecognizers>
-                </Border>
-
-                <Border x:Name="HasDropZone" Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource BorderColor}" StrokeShape="RoundRectangle 16">
-                    <VerticalStackLayout Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <Label Text="Has" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding HasToggleText}" Command="{Binding ToggleHasExpandedCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="White" FontSize="12" Padding="12,6" />
-                        </Grid>
-                        <VerticalStackLayout Spacing="10" IsVisible="{Binding IsHasExpanded}">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Entry Grid.Column="0" Placeholder="Add an owned item" Text="{Binding NewHasItemName}" />
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddHasItemCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
-                            </Grid>
-
-                            <CollectionView ItemsSource="{Binding HasItems}" SelectionMode="None">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
-                                        <Border Padding="10" Margin="0,4" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                                                    <Label Text="{Binding Name}" VerticalOptions="Center"  TextColor="{DynamicResource WarningColor}"/>
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="2" Text="Edit" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding .}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" />
-                                                    <Button Grid.Column="3" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" TextColor="White" FontSize="12" Padding="8,4" />
-                                                </Grid>
-                                                <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhoto}">
-                                                    <HorizontalStackLayout>
-                                                        <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
-                                                        <Button Text="Remove" Clicked="RemovePhotoFromItem" IsVisible="{Binding IsPhotoExpanded}"/>
-                                                    </HorizontalStackLayout>
-                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="160" WidthRequest="160" HorizontalOptions="Start">
-                                                        <Image.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:InventoryViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
-                                                        </Image.GestureRecognizers>
-                                                    </Image>
-                                                </VerticalStackLayout>
-                                            </VerticalStackLayout>
-                                            <Border.GestureRecognizers>
-                                                <DragGestureRecognizer DragStarting="OnItemDragStarting" />
-                                            </Border.GestureRecognizers>
-                                        </Border>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-                    <Border.GestureRecognizers>
-                        <DropGestureRecognizer AllowDrop="True" DragOver="OnHasDropZoneDragOver" Drop="OnHasDropZoneDrop" DragLeave="OnDropZoneDragLeave" />
-                    </Border.GestureRecognizers>
-                </Border>
+               <Border Padding="12" StrokeShape="RoundRectangle 16" BackgroundColor="{DynamicResource SurfaceColor}">
+                   <VerticalStackLayout Spacing="10">
+                       <Label Text="Has" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryColor}" />
+                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                           <Entry Grid.Column="0" Placeholder="Add an owned item" Text="{Binding NewHasItemName}" />
+                           <Button Grid.Column="1" Text="Add" Command="{Binding AddHasItemCommand}" />
+                       </Grid>
+                       <CollectionView ItemsSource="{Binding HasItems}" SelectionMode="None">
+                           <CollectionView.ItemTemplate>
+                               <DataTemplate x:DataType="viewModels:InventoryItemViewModel">
+                                   <Border Padding="10" Margin="0,4" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{DynamicResource SurfaceAltColor}">
+                                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                           <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                           <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked" BackgroundColor="{DynamicResource ErrorColor}" />
+                                       </Grid>
+                                   </Border>
+                               </DataTemplate>
+                           </CollectionView.ItemTemplate>
+                       </CollectionView>
+                   </VerticalStackLayout>
+               </Border>
             </VerticalStackLayout>
         </ScrollView>
-
-        <Grid Grid.Row="0" BackgroundColor="#00000080" IsVisible="{Binding IsEditing}" Padding="16">
-            <Border Padding="20" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="0" StrokeShape="RoundRectangle 16" VerticalOptions="Center" HorizontalOptions="Center">
-                <VerticalStackLayout Spacing="16" WidthRequest="300">
-                    <Label Text="Edit Item" FontSize="18" FontAttributes="Bold" TextColor="{DynamicResource PrimaryColor}" />
-                    <Entry Placeholder="Item name" Text="{Binding EditingItemName}" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Grid.Column="0" Text="Save" Command="{Binding SaveEditCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" />
-                        <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelEditCommand}" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-        </Grid>
-
-        <Grid Grid.Row="0" BackgroundColor="#CC000000" IsVisible="{Binding IsPhotoPreviewVisible}" Padding="20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Button Grid.Row="0" Text="Close" Command="{Binding ClosePhotoPreviewCommand}" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White" HorizontalOptions="End" />
-            <Border Grid.Row="1" Padding="8" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12" VerticalOptions="Center" HorizontalOptions="Center">
-                <Image Source="{Binding PhotoPreviewSource}" Aspect="AspectFit" HeightRequest="500" WidthRequest="500" />
-            </Border>
-        </Grid>
     </Grid>
-
 </ContentPage>

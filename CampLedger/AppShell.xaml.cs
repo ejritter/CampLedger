@@ -56,7 +56,8 @@ public partial class AppShell : Shell
 
     private async void OnThemeGearTapped(object sender, TappedEventArgs e)
     {
-        ContentPage? currentPage = Shell.Current?.CurrentPage as ContentPage ?? Application.Current?.MainPage as ContentPage;
+        ContentPage? currentPage = Shell.Current?.CurrentPage as ContentPage
+            ?? Application.Current?.Windows.FirstOrDefault()?.Page as ContentPage;
         if (currentPage is null)
         {
             return;

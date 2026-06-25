@@ -13,6 +13,11 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
     private const string MigrationFlagKey = "camp-ledger-sqlite-migrated";
     private readonly string _databasePath;
     private readonly IPreferences _preferences;
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
     private readonly object _saveLock = new();
     private Task _pendingSaveTask = Task.CompletedTask;
@@ -56,8 +61,15 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
                 pendingSave = _pendingSaveTask;
             }
 
-            pendingSave.GetAwaiter().GetResult();
-            return LoadAsync().GetAwaiter().GetResult();
+            // Run the async load on the thread pool so its continuations never
+            // resume on a captured UI SynchronizationContext. Blocking the UI
+            // thread on an async SQLite call directly deadlocks Windows startup
+            // (CreateWindow never completes and no native window is shown).
+            return Task.Run(async () =>
+            {
+                await pendingSave.ConfigureAwait(false);
+                return await LoadAsync().ConfigureAwait(false);
+            }).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
@@ -157,7 +169,7 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
     {
         try
         {
-            if (_preferences.Get(MigrationFlagKey, false, null))
+            if (_preferences.Get(MigrationFlagKey, false, null) && await HasPersistedStateAsync(database))
             {
                 return;
             }
@@ -179,11 +191,7 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
                 return;
             }
 
-            var migratedState = JsonSerializer.Deserialize<CampLedgerState>(preferencesJson, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
+            var migratedState = TryDeserializeState(preferencesJson);
             if (migratedState is null)
             {
                 return;
@@ -196,6 +204,319 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
         {
             Debug.WriteLine($"Preferences migration failed: {ex.Message}");
         }
+    }
+
+    private static CampLedgerState? TryDeserializeState(string preferencesJson)
+    {
+        if (string.IsNullOrWhiteSpace(preferencesJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(preferencesJson);
+            if (LooksLikeLegacyEnvelope(document.RootElement))
+            {
+                var legacyState = TryDeserializeLegacyEnvelope(document.RootElement);
+                if (legacyState is not null)
+                {
+                    return legacyState;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        try
+        {
+            var state = JsonSerializer.Deserialize<CampLedgerState>(preferencesJson, SerializerOptions);
+            if (state is not null)
+            {
+                var normalizedState = NormalizeState(state);
+                if (HasStateData(normalizedState))
+                {
+                    return normalizedState;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        return null;
+    }
+
+    private static CampLedgerState NormalizeState(CampLedgerState state)
+    {
+        state.Needs ??= [];
+        state.Wants ??= [];
+        state.Has ??= [];
+        state.CurrentTrip ??= new TripRecord();
+        state.TripHistory ??= [];
+        return state;
+    }
+
+    private static bool HasStateData(CampLedgerState state)
+    {
+        if (state.Needs.Count > 0 || state.Wants.Count > 0 || state.Has.Count > 0)
+        {
+            return true;
+        }
+
+        if (state.TripHistory.Count > 0)
+        {
+            return true;
+        }
+
+        if (state.CurrentTrip is not null && (state.CurrentTrip.Items.Count > 0 || !string.IsNullOrWhiteSpace(state.CurrentTrip.Notes) || state.CurrentTrip.Location is not null))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool LooksLikeLegacyEnvelope(JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        return TryGetProperty(root, "inventory", out _) ||
+               TryGetProperty(root, "needs", out _) ||
+               TryGetProperty(root, "wants", out _) ||
+               TryGetProperty(root, "has", out _) ||
+               TryGetProperty(root, "currentTrip", out _) ||
+               TryGetProperty(root, "tripHistory", out _);
+    }
+
+    private static CampLedgerState? TryDeserializeLegacyEnvelope(JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var state = new CampLedgerState();
+        var foundAnyInventory = false;
+        var foundAnyState = false;
+
+        if (TryGetProperty(root, "inventory", out var inventoryElement))
+        {
+            foundAnyInventory = true;
+            foundAnyState = true;
+            TryPopulateInventoryBuckets(inventoryElement, state);
+        }
+
+        if (!foundAnyInventory)
+        {
+            TryPopulateInventoryBuckets(root, state);
+            foundAnyState = state.Needs.Count > 0 || state.Wants.Count > 0 || state.Has.Count > 0;
+        }
+
+        if (TryGetProperty(root, "currentTrip", out var currentTripElement))
+        {
+            state.CurrentTrip = ParseTripRecord(currentTripElement) ?? new TripRecord();
+            foundAnyState = true;
+        }
+
+        if (TryGetProperty(root, "tripHistory", out var tripHistoryElement) && tripHistoryElement.ValueKind == JsonValueKind.Array)
+        {
+            state.TripHistory = ParseTripHistory(tripHistoryElement);
+            foundAnyState = true;
+        }
+
+        if (!foundAnyState)
+        {
+            return null;
+        }
+
+        return NormalizeState(state);
+    }
+
+    private static void TryPopulateInventoryBuckets(JsonElement root, CampLedgerState state)
+    {
+        if (TryGetProperty(root, "needs", out var needsElement))
+        {
+            state.Needs = ParseInventoryItems(needsElement);
+        }
+
+        if (TryGetProperty(root, "wants", out var wantsElement))
+        {
+            state.Wants = ParseInventoryItems(wantsElement);
+        }
+
+        if (TryGetProperty(root, "has", out var hasElement))
+        {
+            state.Has = ParseInventoryItems(hasElement);
+        }
+    }
+
+    private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
+    {
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            value = default;
+            return false;
+        }
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static List<InventoryItem> ParseInventoryItems(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var items = new List<InventoryItem>();
+        foreach (var itemElement in element.EnumerateArray())
+        {
+            if (itemElement.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            var item = new InventoryItem();
+            if (TryGetProperty(itemElement, "name", out var nameElement) && nameElement.ValueKind == JsonValueKind.String)
+            {
+                item.Name = nameElement.GetString() ?? string.Empty;
+            }
+
+            if (TryGetProperty(itemElement, "bucket", out var bucketElement))
+            {
+                if (bucketElement.ValueKind == JsonValueKind.Number && bucketElement.TryGetInt32(out var bucketValue))
+                {
+                    item.Bucket = (InventoryBucket)bucketValue;
+                }
+                else if (bucketElement.ValueKind == JsonValueKind.String && Enum.TryParse<InventoryBucket>(bucketElement.GetString(), true, out var bucket))
+                {
+                    item.Bucket = bucket;
+                }
+            }
+
+            if (TryGetProperty(itemElement, "photoData", out var photoDataElement) && photoDataElement.ValueKind == JsonValueKind.String)
+            {
+                item.PhotoData = Convert.FromBase64String(photoDataElement.GetString() ?? string.Empty);
+            }
+
+            items.Add(item);
+        }
+
+        return items;
+    }
+
+    private static List<TripRecord> ParseTripHistory(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var trips = new List<TripRecord>();
+        foreach (var tripElement in element.EnumerateArray())
+        {
+            var trip = ParseTripRecord(tripElement);
+            if (trip is not null)
+            {
+                trips.Add(trip);
+            }
+        }
+
+        return trips;
+    }
+
+    private static TripRecord? ParseTripRecord(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var trip = new TripRecord();
+
+        if (TryGetProperty(element, "notes", out var notesElement) && notesElement.ValueKind == JsonValueKind.String)
+        {
+            trip.Notes = notesElement.GetString() ?? string.Empty;
+        }
+
+        if (TryGetProperty(element, "date", out var dateElement) && dateElement.ValueKind == JsonValueKind.String)
+        {
+            trip.Date = DateTime.TryParse(dateElement.GetString(), out var date) ? date : trip.Date;
+        }
+
+        if (TryGetProperty(element, "startDate", out var startDateElement) && startDateElement.ValueKind == JsonValueKind.String)
+        {
+            trip.StartDate = DateTime.TryParse(startDateElement.GetString(), out var date) ? date : trip.StartDate;
+        }
+
+        if (TryGetProperty(element, "endDate", out var endDateElement) && endDateElement.ValueKind == JsonValueKind.String)
+        {
+            trip.EndDate = DateTime.TryParse(endDateElement.GetString(), out var date) ? date : trip.EndDate;
+        }
+
+        if (TryGetProperty(element, "location", out var locationElement) && locationElement.ValueKind == JsonValueKind.Object)
+        {
+            trip.Location = new TripLocation();
+            if (TryGetProperty(locationElement, "locationName", out var locationNameElement) && locationNameElement.ValueKind == JsonValueKind.String)
+            {
+                trip.Location.LocationName = locationNameElement.GetString() ?? string.Empty;
+            }
+
+            if (TryGetProperty(locationElement, "googleMapsUrl", out var googleMapsUrlElement) && googleMapsUrlElement.ValueKind == JsonValueKind.String)
+            {
+                trip.Location.GoogleMapsUrl = googleMapsUrlElement.GetString() ?? string.Empty;
+            }
+        }
+
+        if (TryGetProperty(element, "items", out var itemsElement) && itemsElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var checklistItemElement in itemsElement.EnumerateArray())
+            {
+                if (checklistItemElement.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var checklistItem = new TripChecklistItem();
+                if (TryGetProperty(checklistItemElement, "name", out var itemNameElement) && itemNameElement.ValueKind == JsonValueKind.String)
+                {
+                    checklistItem.Name = itemNameElement.GetString() ?? string.Empty;
+                }
+
+                if (TryGetProperty(checklistItemElement, "isPacked", out var packedElement) && packedElement.ValueKind == JsonValueKind.True)
+                {
+                    checklistItem.IsPacked = true;
+                }
+                else if (TryGetProperty(checklistItemElement, "isPacked", out packedElement) && packedElement.ValueKind == JsonValueKind.False)
+                {
+                    checklistItem.IsPacked = false;
+                }
+
+                if (TryGetProperty(checklistItemElement, "photoData", out var photoElement) && photoElement.ValueKind == JsonValueKind.String)
+                {
+                    checklistItem.PhotoData = Convert.FromBase64String(photoElement.GetString() ?? string.Empty);
+                }
+
+                trip.Items.Add(checklistItem);
+            }
+        }
+
+        return trip;
     }
 
     private async Task<bool> HasPersistedStateAsync(SQLiteAsyncConnection database)

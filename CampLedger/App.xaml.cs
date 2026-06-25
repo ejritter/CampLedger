@@ -10,12 +10,15 @@ namespace CampLedger;
 public partial class App : Application
 {
     private const string StartupErrorLogFileName = "startup-errors.log";
+    private const string StartupTraceLogFileName = "startup-trace.log";
     private readonly IThemeService _themeService;
     private readonly IServiceProvider? _serviceProvider;
     private bool _themeInitialized;
 
     public App()
     {
+        AppDomain.CurrentDomain.FirstChanceException += OnFirstChanceException;
+        LogStartupTrace("App.ctor", "starting");
         try
         {
             InitializeComponent();
@@ -30,9 +33,7 @@ public partial class App : Application
         {
             _serviceProvider = IPlatformApplication.Current?.Services;
             _themeService = _serviceProvider?.GetService<IThemeService>() ?? new ThemeService();
-
-            var services = _serviceProvider ?? new ServiceCollection().BuildServiceProvider();
-            MainPage = services.GetService<AppShell>() ?? new AppShell(services);
+            LogStartupTrace("App.ctor", $"services={_serviceProvider is not null}");
         }
         catch (Exception ex)
         {
@@ -45,16 +46,20 @@ public partial class App : Application
     {
         try
         {
-            var window = new Window(MainPage ?? new ContentPage
-            {
-                Content = new Label { Text = "CampLedger is starting..." }
-            });
+            LogStartupTrace("CreateWindow", "begin");
+            var rootPage = CreateRootPage();
+            LogStartupTrace("CreateWindow", $"rootPage={rootPage.GetType().FullName}");
+            var window = new Window(rootPage);
             window.Created += OnWindowCreated;
+            LogStartupTrace("CreateWindow", $"windows={Application.Current?.Windows.Count ?? 0}");
+            LogStartupTrace("CreateWindow", $"handlerSet={window.Handler is not null}");
+            LogStartupTrace("CreateWindow", "created window");
             return window;
         }
         catch (Exception ex)
         {
             LogStartupFailure(ex, "CreateWindow shell startup");
+            LogStartupTrace("CreateWindow", $"failed: {ex.Message}");
             return new Window(new ContentPage
             {
                 Content = new Label { Text = ex.Message }
@@ -62,18 +67,54 @@ public partial class App : Application
         }
     }
 
+    private Page CreateRootPage()
+    {
+        try
+        {
+            if (_serviceProvider is null)
+            {
+                var services = new ServiceCollection();
+                return new AppShell(services.BuildServiceProvider());
+            }
+
+            return new AppShell(_serviceProvider);
+        }
+        catch (Exception ex)
+        {
+            LogStartupFailure(ex, "CreateRootPage");
+            return new ContentPage
+            {
+                Title = "CampLedger",
+                Content = new VerticalStackLayout
+                {
+                    Padding = new Thickness(24),
+                    Spacing = 12,
+                    Children =
+                    {
+                        new Label { Text = "CampLedger is starting...", FontAttributes = FontAttributes.Bold, FontSize = 20 },
+                        new Label { Text = ex.Message, LineBreakMode = LineBreakMode.WordWrap }
+                    }
+                }
+            };
+        }
+    }
+
     private void OnWindowCreated(object? sender, EventArgs e)
     {
+        LogStartupTrace("OnWindowCreated", "begin");
         if (sender is not Window window || window.Page is null)
         {
+            LogStartupTrace("OnWindowCreated", "window or page missing");
             return;
         }
 
+        LogStartupTrace("OnWindowCreated", $"page={window.Page.GetType().FullName}");
         window.Page.Loaded += OnPageLoaded;
     }
 
     private void OnPageLoaded(object? sender, EventArgs e)
     {
+        LogStartupTrace("OnPageLoaded", "begin");
         if (_themeInitialized)
         {
             return;
@@ -85,6 +126,7 @@ public partial class App : Application
         {
             try
             {
+                LogStartupTrace("OnPageLoaded", "initializing theme");
                 _themeService?.Initialize();
             }
             catch (Exception ex)
@@ -158,5 +200,41 @@ public partial class App : Application
         var directory = Path.Combine(localAppData, "CampLedger");
         Directory.CreateDirectory(directory);
         return Path.Combine(directory, StartupErrorLogFileName);
+    }
+
+    private static void LogStartupTrace(string stage, string message)
+    {
+        try
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CampLedger", StartupTraceLogFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.AppendAllText(path, $"{DateTimeOffset.Now:O} [{stage}] {message}{Environment.NewLine}", Encoding.UTF8);
+        }
+        catch
+        {
+        }
+    }
+
+    private static void OnFirstChanceException(object? sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
+    {
+        try
+        {
+            if (e.Exception is null)
+            {
+                return;
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine($"{e.Exception.GetType().FullName}: {e.Exception.Message}");
+            if (!string.IsNullOrWhiteSpace(e.Exception.StackTrace))
+            {
+                builder.AppendLine(e.Exception.StackTrace);
+            }
+
+            LogStartupTrace("FirstChanceException", builder.ToString());
+        }
+        catch
+        {
+        }
     }
 }

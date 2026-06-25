@@ -91,6 +91,11 @@
 	  </None>
 	</ItemGroup>
 
+	<Target Name="StopRunningWindowsApp" BeforeTargets="PrepareForBuild" Condition="$([MSBuild]::IsOSPlatform('windows')) and '$(TargetPlatformIdentifier)' == 'Windows'">
+	  <Message Importance="high" Text="Stopping CampLedger process before Windows build for $(TargetFramework)" />
+	  <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $processes = Get-Process CampLedger -ErrorAction SilentlyContinue; if ($processes) { $processes | Stop-Process -Force -ErrorAction SilentlyContinue }; $deadline = (Get-Date).AddSeconds(10); while ((Get-Process CampLedger -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }; if (Get-Process CampLedger -ErrorAction SilentlyContinue) { exit 1 } }&quot;" IgnoreExitCode="false" />
+	</Target>
+
 	<Target Name="CopyCopilotInstructionMarkdownFiles" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
 	  <PropertyGroup>
 		<CopilotInstructionsDestinationRoot>C:\Users\roija\OneDrive\Documents\Copilot-Instructions\$(RootNamespace)\</CopilotInstructionsDestinationRoot>
