@@ -3,6 +3,7 @@ using CampLedger.Services;
 using CampLedger.ViewModels;
 using CampLedger.Pages;
 using CommunityToolkit.Maui;
+using MauiLeftSideNavBar;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 
@@ -17,10 +18,11 @@ public static class MauiProgram
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                .UseMauiCommunityToolkit(options =>
-                {
-                    options.SetShouldEnableSnackbarOnWindows(true);
-                })
+               .UseMauiLeftSideNavBar()
+               .UseMauiCommunityToolkit(options =>
+               {
+                   options.SetShouldEnableSnackbarOnWindows(true);
+               })
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -34,6 +36,8 @@ public static class MauiProgram
             builder.Services.AddSingleton<IToastNotificationService, ToastNotificationService>();
             builder.Services.AddSingleton<ITripDurationValidationService, TripDurationValidationService>();
             builder.Services.AddSingleton<AppShell>();
+            builder.Services.AddTransient<CampLedgerNavigationViewModel>();
+            builder.Services.AddTransient<CampLedgerNavigationPage>();
             builder.Services.AddTransient<ThemeSelectionPopupViewModel>();
             builder.Services.AddTransientPopup<ThemeSelectionPopup>();
             builder.Services.AddTransient<InventoryViewModel>();

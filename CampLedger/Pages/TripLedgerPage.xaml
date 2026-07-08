@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
              x:Class="CampLedger.Pages.TripLedgerPage"
+             x:Name="TripLedgerPageRoot"
              x:DataType="viewModels:TripLedgerViewModel"
-             Title="Trip Ledger"
+             Title="Ledger"
               Style="{StaticResource PageStyle}">
 
     <Grid>
@@ -48,27 +49,30 @@
                             <Button Grid.Column="1" Text="{Binding UnpackedToggleText}" Command="{Binding ToggleUnpackedExpandedCommand}" BackgroundColor="{DynamicResource WarningColor}" TextColor="White" FontSize="12" Padding="12,6" />
                         </Grid>
                         <VerticalStackLayout Spacing="10" IsVisible="{Binding IsUnpackedExpanded}">
-                            <CollectionView ItemsSource="{Binding FilteredUnpackedChecklistItems}" SelectionMode="None">
+                            <CollectionView ItemsSource="{Binding FilteredUnpackedChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
+                                <CollectionView.ItemsLayout>
+                                    <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
+                                </CollectionView.ItemsLayout>
                                 <CollectionView.EmptyView>
                                     <Label Text="All items are packed!" FontAttributes="Italic" TextColor="{DynamicResource TertiaryTextColor}" />
                                 </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:TripChecklistItemViewModel">
-                                        <Border Padding="12" Margin="0,4" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <Border Padding="10" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
+                                            <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                                                     <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
-                                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextColor="{DynamicResource PrimaryTextColor}" />
+                                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextColor="{DynamicResource PrimaryTextColor}" LineBreakMode="WordWrap" MaxLines="2" />
                                                 </Grid>
-                                                <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhoto}">
+                                                <VerticalStackLayout Grid.Row="1" Spacing="6" IsVisible="{Binding HasPhoto}">
                                                     <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
-                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="160" WidthRequest="160" HorizontalOptions="Start">
+                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="120" WidthRequest="120" HorizontalOptions="Start">
                                                         <Image.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripLedgerViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
                                                         </Image.GestureRecognizers>
                                                     </Image>
                                                 </VerticalStackLayout>
-                                            </VerticalStackLayout>
+                                            </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -84,27 +88,30 @@
                             <Button Grid.Column="1" Text="{Binding PackedToggleText}" Command="{Binding TogglePackedExpandedCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" FontSize="12" Padding="12,6" />
                         </Grid>
                         <VerticalStackLayout Spacing="10" IsVisible="{Binding IsPackedExpanded}">
-                            <CollectionView ItemsSource="{Binding FilteredPackedChecklistItems}" SelectionMode="None">
+                            <CollectionView ItemsSource="{Binding FilteredPackedChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
+                                <CollectionView.ItemsLayout>
+                                    <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
+                                </CollectionView.ItemsLayout>
                                 <CollectionView.EmptyView>
                                     <Label Text="No items packed yet." FontAttributes="Italic" TextColor="{DynamicResource TertiaryTextColor}" />
                                 </CollectionView.EmptyView>
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:TripChecklistItemViewModel">
-                                        <Border Padding="12" Margin="0,4" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                            <VerticalStackLayout Spacing="8">
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <Border Padding="10" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
+                                            <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                                                     <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
-                                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextDecorations="Strikethrough" TextColor="{DynamicResource PrimaryColor}" />
+                                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextDecorations="Strikethrough" TextColor="{DynamicResource PrimaryColor}" LineBreakMode="WordWrap" MaxLines="2" />
                                                 </Grid>
-                                                <VerticalStackLayout Spacing="6" IsVisible="{Binding HasPhoto}">
+                                                <VerticalStackLayout Grid.Row="1" Spacing="6" IsVisible="{Binding HasPhoto}">
                                                     <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
-                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="160" WidthRequest="160" HorizontalOptions="Start">
+                                                    <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="120" WidthRequest="120" HorizontalOptions="Start">
                                                         <Image.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripLedgerViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
                                                         </Image.GestureRecognizers>
                                                     </Image>
                                                 </VerticalStackLayout>
-                                            </VerticalStackLayout>
+                                            </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -120,14 +127,31 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Grid BackgroundColor="#CC000000" IsVisible="{Binding IsPhotoPreviewVisible}" Padding="20">
+        <Grid BackgroundColor="#CC000000"
+              IsVisible="{Binding Source={x:Reference TripLedgerPageRoot}, Path=BindingContext.IsPhotoPreviewVisible}"
+              Padding="20"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill"
+              ZIndex="1000"
+              InputTransparent="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Button Grid.Row="0" Text="Close" Command="{Binding ClosePhotoPreviewCommand}" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White" HorizontalOptions="End" />
-            <Border Grid.Row="1" Padding="8" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="0" StrokeShape="RoundRectangle 12" VerticalOptions="Center" HorizontalOptions="Center">
-                <Image Source="{Binding PhotoPreviewSource}" Aspect="AspectFit" HeightRequest="500" WidthRequest="500" />
+            <Button Grid.Row="0"
+                    Text="Close"
+                    Command="{Binding Source={x:Reference TripLedgerPageRoot}, Path=BindingContext.ClosePhotoPreviewCommand}"
+                    BackgroundColor="{DynamicResource TertiaryTextColor}"
+                    TextColor="White"
+                    HorizontalOptions="End" />
+            <Border Grid.Row="1"
+                    Padding="8"
+                    BackgroundColor="{DynamicResource SurfaceColor}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center">
+                <Image Source="{Binding Source={x:Reference TripLedgerPageRoot}, Path=BindingContext.PhotoPreviewSource}" Aspect="AspectFit" HeightRequest="500" WidthRequest="500" />
             </Border>
         </Grid>
     </Grid>

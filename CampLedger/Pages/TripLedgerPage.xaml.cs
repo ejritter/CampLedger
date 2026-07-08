@@ -1,5 +1,3 @@
-using CampLedger.Pages;
-using CampLedger.Services;
 using CampLedger.Models;
 using CampLedger.ViewModels;
 using CommunityToolkit.Maui.Extensions;
@@ -11,32 +9,11 @@ public partial class TripLedgerPage : ContentPage
     private CancellationTokenSource? _notesSaveCts;
     private bool _suppressRefreshOnAppearing;
 
-    public TripLedgerPage()
-        : this(CreateViewModel())
-    {
-    }
-
     public TripLedgerPage(TripLedgerViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        this.AttachViewModel(viewModel);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-    }
-
-    private static TripLedgerViewModel CreateViewModel()
-    {
-        try
-        {
-            return ServiceHelper.GetService<TripLedgerViewModel>();
-        }
-        catch
-        {
-            var storageService = new CampLedgerStorageService();
-            var stateService = new CampLedgerStateService(storageService);
-            var toastService = new ToastNotificationService();
-            var validationService = new TripDurationValidationService();
-            return new TripLedgerViewModel(stateService, toastService, validationService);
-        }
     }
 
     private TripLedgerViewModel ViewModel => (TripLedgerViewModel)BindingContext;
@@ -51,6 +28,7 @@ public partial class TripLedgerPage : ContentPage
         }
         else
         {
+            ViewModel.ReloadFromStorage();
             ViewModel.RefreshFromHasListCommand.Execute(null);
         }
     }
@@ -85,7 +63,7 @@ public partial class TripLedgerPage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OpenLocationInDefaultMapAppAsync error: {ex.Message}\n{ex.StackTrace}");
-            await DisplayAlert("Error", "Could not open the maps application.", "OK");
+            await this.GetPresentingPage().DisplayAlertAsync("Error", "Could not open the maps application.", "OK");
         }
     }
 
@@ -99,7 +77,15 @@ public partial class TripLedgerPage : ContentPage
             System.Diagnostics.Debug.WriteLine("ShowLocationPopupAsync: Showing toolkit popup");
             // Suppress the OnAppearing refresh that occurs when the popup closes.
             _suppressRefreshOnAppearing = true;
-            await this.ShowPopupAsync(popup);
+            // Must show the popup on the actually-attached window page, not "this" - see
+            // GetPresentingPage remarks. TripLedgerPage is never attached to a Window (its
+            // Content is reparented into the nav bar and the page itself discarded), so its
+            // Navigation.Inner is always null. ShowPopupAsync on an unattached page still
+            // "succeeds" (NavigationProxy.OnPushModal queues the push and returns an already
+            // completed task when Inner is null) but the popup is never actually displayed,
+            // and the awaited PopupClosed TaskCompletionSource then never completes - so the
+            // call just hangs forever, which is why clicking the location button did nothing.
+            await this.GetPresentingPage().ShowPopupAsync(popup);
             // Ensure suppression is cleared after popup returns in case OnAppearing wasn't fired.
             _suppressRefreshOnAppearing = false;
 
@@ -118,7 +104,7 @@ public partial class TripLedgerPage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"ShowLocationPopupAsync error: {ex.Message}\n{ex.StackTrace}");
-            await DisplayAlert("Error", $"Could not show location popup: {ex.Message}", "OK");
+            await this.GetPresentingPage().DisplayAlertAsync("Error", $"Could not show location popup: {ex.Message}", "OK");
             ViewModel.CloseLocationPopupCommand.Execute(null);
         }
     }

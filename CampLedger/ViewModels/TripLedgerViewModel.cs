@@ -27,7 +27,7 @@ public sealed partial class TripLedgerViewModel : ViewModelBase
     public partial string TripNotes { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial bool IsPhotoPreviewVisible { get; set; }
+    public partial bool IsPhotoPreviewVisible { get; set; } = false;
 
     [ObservableProperty]
     public partial ImageSource? PhotoPreviewSource { get; set; }
@@ -119,6 +119,12 @@ public sealed partial class TripLedgerViewModel : ViewModelBase
     private void TogglePackedExpanded()
     {
         IsPackedExpanded = !IsPackedExpanded;
+    }
+
+    public void ReloadFromStorage()
+    {
+        _stateService.Reload();
+        LoadFromState();
     }
 
     [RelayCommand]

@@ -50,6 +50,12 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
 
     public ObservableCollection<TripRecordViewModel> FilteredTrips { get; }
 
+    public void ReloadFromStorage()
+    {
+        _stateService.Reload();
+        Refresh();
+    }
+
     [RelayCommand]
     public void Refresh()
     {
@@ -310,7 +316,13 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
             return;
         }
 
-        bool confirmed = await Shell.Current.DisplayAlertAsync(
+        var presentingPage = CurrentPageProvider.Current;
+        if (presentingPage is null)
+        {
+            return;
+        }
+
+        bool confirmed = await presentingPage.DisplayAlertAsync(
             "Delete Trip",
             $"Are you sure you want to delete the trip from {record.TripDurationText}? This cannot be undone.",
             "Delete",
@@ -340,7 +352,12 @@ public sealed partial class TripHistoryViewModel : ViewModelBase
     {
         if (record?.Trip.Location == null)
         {
-            await Shell.Current.DisplayAlertAsync("No Location", "No location has been set for this trip.", "OK");
+            var presentingPage = CurrentPageProvider.Current;
+            if (presentingPage is not null)
+            {
+                await presentingPage.DisplayAlertAsync("No Location", "No location has been set for this trip.", "OK");
+            }
+
             return;
         }
 

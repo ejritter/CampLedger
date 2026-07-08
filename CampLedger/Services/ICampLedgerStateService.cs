@@ -6,5 +6,7 @@ public interface ICampLedgerStateService
 {
     CampLedgerState State { get; }
 
+    void Reload();
+
     void Save();
 }

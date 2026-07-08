@@ -11,15 +11,11 @@ public partial class InventoryPage : ContentPage
     private const string DragBucketKey = "DragBucket";
     private CancellationTokenSource? _searchDebounceCts;
 
-    public InventoryPage()
-        : this(CreateViewModel())
-    {
-    }
 
     public InventoryPage(InventoryViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        this.AttachViewModel(viewModel);
     }
 
     private static InventoryViewModel CreateViewModel()
@@ -94,7 +90,7 @@ public partial class InventoryPage : ContentPage
 
         if (item.HasPhoto)
         {
-            var shouldReplace = await DisplayAlertAsync("Replace Photo", "This item already has a photo. Do you want to replace it?", "Replace", "Cancel");
+            var shouldReplace = await this.GetPresentingPage().DisplayAlertAsync("Replace Photo", "This item already has a photo. Do you want to replace it?", "Replace", "Cancel");
             if (!shouldReplace)
             {
                 return;
@@ -109,7 +105,7 @@ public partial class InventoryPage : ContentPage
 
         if (permissionStatus != PermissionStatus.Granted)
         {
-            await DisplayAlertAsync("Permission Needed", "Camera permission is required to take photos.", "OK");
+            await this.GetPresentingPage().DisplayAlertAsync("Permission Needed", "Camera permission is required to take photos.", "OK");
             return;
         }
 
@@ -127,7 +123,7 @@ public partial class InventoryPage : ContentPage
             }
             else
             {
-                var useGallery = await DisplayAlertAsync("Camera Unavailable", "Camera capture is unavailable on this device. Pick a photo from your gallery instead?", "Pick Photo", "Cancel");
+                var useGallery = await this.GetPresentingPage().DisplayAlertAsync("Camera Unavailable", "Camera capture is unavailable on this device. Pick a photo from your gallery instead?", "Pick Photo", "Cancel");
                 if (!useGallery)
                 {
                     return;
@@ -150,7 +146,7 @@ public partial class InventoryPage : ContentPage
         {
             try
             {
-                var useGallery = await DisplayAlertAsync("Camera Unavailable", "Photo capture is unavailable. Pick a photo from your gallery instead?", "Pick Photo", "Cancel");
+                var useGallery = await this.GetPresentingPage().DisplayAlertAsync("Camera Unavailable", "Photo capture is unavailable. Pick a photo from your gallery instead?", "Pick Photo", "Cancel");
                 if (!useGallery)
                 {
                     return;
@@ -173,16 +169,16 @@ public partial class InventoryPage : ContentPage
             }
             catch (Exception)
             {
-                await DisplayAlertAsync("Photo Error", "Unable to capture or pick a photo right now.", "OK");
+                await this.GetPresentingPage().DisplayAlertAsync("Photo Error", "Unable to capture or pick a photo right now.", "OK");
             }
         }
         catch (PermissionException)
         {
-            await DisplayAlertAsync("Permission Needed", "Camera permission is required to take photos.", "OK");
+            await this.GetPresentingPage().DisplayAlertAsync("Permission Needed", "Camera permission is required to take photos.", "OK");
         }
         catch (Exception)
         {
-            await DisplayAlertAsync("Photo Error", "Unable to capture photo right now.", "OK");
+            await this.GetPresentingPage().DisplayAlertAsync("Photo Error", "Unable to capture photo right now.", "OK");
         }
     }
 
@@ -193,7 +189,7 @@ public partial class InventoryPage : ContentPage
             return;
         }
 
-        bool confirmed = await DisplayAlertAsync("Remove Item", $"Are you sure you want to remove \"{item.Name}\"?", "Remove", "Cancel");
+        bool confirmed = await this.GetPresentingPage().DisplayAlertAsync("Remove Item", $"Are you sure you want to remove \"{item.Name}\"?", "Remove", "Cancel");
         if (confirmed)
         {
             ViewModel.RemoveItemCommand.Execute(item);
@@ -269,7 +265,7 @@ public partial class InventoryPage : ContentPage
             return;
         }
 
-        bool confirmed = await DisplayAlertAsync("Remove Photo", $"Are you sure you want to remove this photo?", "Remove", "Cancel");
+        bool confirmed = await this.GetPresentingPage().DisplayAlertAsync("Remove Photo", $"Are you sure you want to remove this photo?", "Remove", "Cancel");
         if (confirmed)
         {
             ViewModel.RemovePhotoFromItemCommand.Execute(item);

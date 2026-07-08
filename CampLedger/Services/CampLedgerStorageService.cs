@@ -11,6 +11,7 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
     private const string DefaultDatabaseFileName = "campledger.db3";
     private const string PreferencesStateKey = "camp-ledger-state";
     private const string MigrationFlagKey = "camp-ledger-sqlite-migrated";
+    private const string MigrationInProgressKey = "camp-ledger-sqlite-migrating";
     private readonly string _databasePath;
     private readonly IPreferences _preferences;
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -35,7 +36,7 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
 
     public CampLedgerStorageService(string databasePath, IPreferences? preferences)
     {
-        _databasePath = databasePath;
+        _databasePath = ResolveDatabasePath(databasePath);
         _preferences = preferences ?? CreatePreferences();
     }
 
@@ -49,6 +50,115 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
         {
             return new NoOpPreferences();
         }
+    }
+
+    private static string ResolveDatabasePath(string requestedPath)
+    {
+        var candidates = GetDatabasePathCandidates(requestedPath).ToList();
+        string? preferredPath = null;
+        var preferredScore = -1;
+
+        foreach (var candidate in candidates)
+        {
+            if (!File.Exists(candidate))
+            {
+                continue;
+            }
+
+            var stateScore = GetDatabaseStateScore(candidate);
+            if (stateScore > preferredScore)
+            {
+                preferredPath = candidate;
+                preferredScore = stateScore;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(preferredPath))
+        {
+            return preferredPath;
+        }
+
+        return requestedPath;
+    }
+
+    private static int GetDatabaseStateScore(string databasePath)
+    {
+        if (!File.Exists(databasePath))
+        {
+            return 0;
+        }
+
+        try
+        {
+            using var connection = new SQLiteConnection(databasePath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.FullMutex);
+            var inventoryCount = TryGetTableRowCount(connection, "InventoryItems");
+            var tripCount = TryGetTableRowCount(connection, "TripRecords");
+            var checklistCount = TryGetTableRowCount(connection, "TripChecklistItems");
+            return inventoryCount + tripCount + checklistCount;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    private static int TryGetTableRowCount(SQLiteConnection connection, string tableName)
+    {
+        try
+        {
+            return connection.ExecuteScalar<int>($"SELECT COUNT(*) FROM {tableName}");
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    private static IEnumerable<string> GetDatabasePathCandidates(string requestedPath)
+    {
+        var normalizedPath = Path.GetFullPath(requestedPath);
+        var directory = Path.GetDirectoryName(normalizedPath);
+        var fileName = Path.GetFileName(normalizedPath);
+
+        yield return normalizedPath;
+
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            yield return Path.Combine(directory, fileName);
+        }
+
+        foreach (var fallback in GetFallbackDatabasePaths(fileName))
+        {
+            yield return fallback;
+        }
+    }
+
+    private static IEnumerable<string> GetFallbackDatabasePaths(string fileName)
+    {
+        var paths = new List<string>();
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+        if (!string.IsNullOrWhiteSpace(localAppData))
+        {
+            paths.Add(Path.Combine(localAppData, "User Name", "EJRitterDevelopment.campledger", "Data", fileName));
+            paths.Add(Path.Combine(localAppData, "EJRitterDevelopment.campledger", "Data", fileName));
+            paths.Add(Path.Combine(localAppData, "CampLedger", fileName));
+        }
+
+        try
+        {
+            var appDataDirectory = FileSystem.AppDataDirectory;
+            if (!string.IsNullOrWhiteSpace(appDataDirectory))
+            {
+                paths.Add(Path.Combine(appDataDirectory, fileName));
+                paths.Add(Path.Combine(appDataDirectory, "Data", fileName));
+            }
+        }
+        catch (Exception)
+        {
+        }
+
+        return paths;
     }
 
     public CampLedgerState Load()
@@ -169,41 +279,63 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
     {
         try
         {
-            if (_preferences.Get(MigrationFlagKey, false, null) && await HasPersistedStateAsync(database))
+            var hasPersistedState = await HasPersistedStateAsync(database);
+            var migrationInProgress = _preferences.Get(MigrationInProgressKey, false, null);
+
+            if (!migrationInProgress && hasPersistedState)
             {
+                MarkMigrationComplete();
+                ClearMigrationInProgress();
                 return;
             }
 
             if (!_preferences.ContainsKey(PreferencesStateKey, null))
             {
+                MarkMigrationComplete();
+                ClearMigrationInProgress();
                 return;
             }
 
             var preferencesJson = _preferences.Get(PreferencesStateKey, string.Empty, null);
             if (string.IsNullOrWhiteSpace(preferencesJson))
             {
-                return;
-            }
-
-            if (await HasPersistedStateAsync(database))
-            {
-                _preferences.Set(MigrationFlagKey, true, null);
+                MarkMigrationComplete();
+                ClearMigrationInProgress();
                 return;
             }
 
             var migratedState = TryDeserializeState(preferencesJson);
             if (migratedState is null)
             {
+                MarkMigrationComplete();
+                ClearMigrationInProgress();
                 return;
             }
 
+            MarkMigrationInProgress();
             await PersistStateAsync(database, migratedState);
-            _preferences.Set(MigrationFlagKey, true, null);
+            MarkMigrationComplete();
+            ClearMigrationInProgress();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Preferences migration failed: {ex.Message}");
         }
+    }
+
+    private void MarkMigrationComplete()
+    {
+        _preferences.Set(MigrationFlagKey, true, null);
+    }
+
+    private void MarkMigrationInProgress()
+    {
+        _preferences.Set(MigrationInProgressKey, true, null);
+    }
+
+    private void ClearMigrationInProgress()
+    {
+        _preferences.Remove(MigrationInProgressKey, null);
     }
 
     private static CampLedgerState? TryDeserializeState(string preferencesJson)
@@ -339,6 +471,33 @@ public sealed class CampLedgerStorageService : ICampLedgerStorageService
 
     private static void TryPopulateInventoryBuckets(JsonElement root, CampLedgerState state)
     {
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            var inventoryItems = ParseInventoryItems(root);
+            state.Needs = inventoryItems.Where(item => item.Bucket == InventoryBucket.Needs).ToList();
+            state.Wants = inventoryItems.Where(item => item.Bucket == InventoryBucket.Wants).ToList();
+            state.Has = inventoryItems.Where(item => item.Bucket == InventoryBucket.Has).ToList();
+            return;
+        }
+
+        if (TryGetProperty(root, "inventory", out var inventoryElement))
+        {
+            if (inventoryElement.ValueKind == JsonValueKind.Array)
+            {
+                var inventoryItems = ParseInventoryItems(inventoryElement);
+                state.Needs = inventoryItems.Where(item => item.Bucket == InventoryBucket.Needs).ToList();
+                state.Wants = inventoryItems.Where(item => item.Bucket == InventoryBucket.Wants).ToList();
+                state.Has = inventoryItems.Where(item => item.Bucket == InventoryBucket.Has).ToList();
+                return;
+            }
+
+            if (inventoryElement.ValueKind == JsonValueKind.Object)
+            {
+                TryPopulateInventoryBuckets(inventoryElement, state);
+                return;
+            }
+        }
+
         if (TryGetProperty(root, "needs", out var needsElement))
         {
             state.Needs = ParseInventoryItems(needsElement);

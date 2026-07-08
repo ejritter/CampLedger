@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using CampLedger.Pages;
 using CampLedger.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Hosting;
@@ -47,6 +48,7 @@ public partial class App : Application
         try
         {
             LogStartupTrace("CreateWindow", "begin");
+            InitializeThemeIfNeeded();
             var rootPage = CreateRootPage();
             LogStartupTrace("CreateWindow", $"rootPage={rootPage.GetType().FullName}");
             var window = new Window(rootPage);
@@ -73,11 +75,14 @@ public partial class App : Application
         {
             if (_serviceProvider is null)
             {
-                var services = new ServiceCollection();
-                return new AppShell(services.BuildServiceProvider());
+                return new ContentPage
+                {
+                    Title = "CampLedger",
+                    Content = new Label { Text = "CampLedger is starting..." }
+                };
             }
 
-            return new AppShell(_serviceProvider);
+            return _serviceProvider.GetRequiredService<CampLedgerNavigationPage>();
         }
         catch (Exception ex)
         {
@@ -115,6 +120,16 @@ public partial class App : Application
     private void OnPageLoaded(object? sender, EventArgs e)
     {
         LogStartupTrace("OnPageLoaded", "begin");
+
+        // Safety net only: InitializeThemeIfNeeded() already ran synchronously in
+        // CreateWindow(), before the root page (and its nav bar chrome) was ever
+        // constructed. This call is guarded by _themeInitialized and is expected
+        // to be a no-op in the normal startup path.
+        InitializeThemeIfNeeded();
+    }
+
+    private void InitializeThemeIfNeeded()
+    {
         if (_themeInitialized)
         {
             return;
@@ -122,18 +137,23 @@ public partial class App : Application
 
         _themeInitialized = true;
 
-        MainThread.BeginInvokeOnMainThread(() =>
+        try
         {
-            try
-            {
-                LogStartupTrace("OnPageLoaded", "initializing theme");
-                _themeService?.Initialize();
-            }
-            catch (Exception ex)
-            {
-                LogStartupFailure(ex, "Theme initialization after page load");
-            }
-        });
+            // Must run before CreateRootPage() resolves CampLedgerNavigationPage:
+            // that page reads Application.Current.Resources synchronously while
+            // building its header/footer/nav items, so the saved theme dictionary
+            // needs to already be merged in or every color falls back to
+            // CampLedgerNavigationPage's hardcoded defaults until the user opens
+            // the theme popup at least once. ThemeService.Initialize() is fully
+            // synchronous (Preferences read + ResourceDictionary swap only), so
+            // calling it directly here carries no sync-over-async deadlock risk.
+            LogStartupTrace("InitializeThemeIfNeeded", "initializing theme");
+            _themeService?.Initialize();
+        }
+        catch (Exception ex)
+        {
+            LogStartupFailure(ex, "Theme initialization before root page creation");
+        }
     }
 
     private static Page CreateErrorPage(string errorMessage)

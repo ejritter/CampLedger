@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using CampLedger.Services;
 using CampLedger.ViewModels;
 using CommunityToolkit.Maui.Extensions;
 using Microsoft.Maui.Controls;
@@ -10,32 +9,11 @@ public partial class TripHistoryPage : ContentPage
 {
     private bool _suppressRefreshOnAppearing;
 
-    public TripHistoryPage()
-        : this(CreateViewModel())
-    {
-    }
-
     public TripHistoryPage(TripHistoryViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        this.AttachViewModel(viewModel);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-    }
-
-    private static TripHistoryViewModel CreateViewModel()
-    {
-        try
-        {
-            return ServiceHelper.GetService<TripHistoryViewModel>();
-        }
-        catch
-        {
-            var storageService = new CampLedgerStorageService();
-            var stateService = new CampLedgerStateService(storageService);
-            var toastService = new ToastNotificationService();
-            var validationService = new TripDurationValidationService();
-            return new TripHistoryViewModel(stateService, toastService, validationService);
-        }
     }
 
     private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
@@ -84,7 +62,7 @@ public partial class TripHistoryPage : ContentPage
         }
         else
         {
-            ViewModel.Refresh();
+            ViewModel.ReloadFromStorage();
         }
     }
 
@@ -108,7 +86,15 @@ public partial class TripHistoryPage : ContentPage
                 : new TripLocationPopupPage(ViewModel.SelectedLocationTrip?.EditingLocation, true);
             // Suppress the OnAppearing refresh that occurs when the popup closes.
             _suppressRefreshOnAppearing = true;
-            await this.ShowPopupAsync(popup);
+            // Must show the popup on the actually-attached window page, not "this" - see
+            // GetPresentingPage remarks. TripHistoryPage is never attached to a Window (its
+            // Content is reparented into the nav bar and the page itself discarded), so its
+            // Navigation.Inner is always null. ShowPopupAsync on an unattached page still
+            // "succeeds" (NavigationProxy.OnPushModal queues the push and returns an already
+            // completed task when Inner is null) but the popup is never actually displayed,
+            // and the awaited PopupClosed TaskCompletionSource then never completes - so the
+            // call just hangs forever, which is why clicking the location button did nothing.
+            await this.GetPresentingPage().ShowPopupAsync(popup);
             // Ensure suppression is cleared after popup returns in case OnAppearing wasn't fired.
             _suppressRefreshOnAppearing = false;
 

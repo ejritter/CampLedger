@@ -33,6 +33,9 @@
     <Compile Include="..\..\CampLedger\Models\TripChecklistItem.cs" Link="Models\TripChecklistItem.cs" />
     <Compile Include="..\..\CampLedger\Models\TripLocation.cs" Link="Models\TripLocation.cs" />
     <Compile Include="..\..\CampLedger\Models\TripRecord.cs" Link="Models\TripRecord.cs" />
+    <Compile Include="..\..\CampLedger\Pages\PageBindingContextExtensions.cs" Link="Pages\PageBindingContextExtensions.cs" />
+    <Compile Include="..\..\CampLedger\Services\CurrentPageProvider.cs" Link="Services\CurrentPageProvider.cs" />
+    <Compile Include="..\..\CampLedger\Services\NavBarItemVisualRefresher.cs" Link="Services\NavBarItemVisualRefresher.cs" />
   </ItemGroup>
 
   <ItemGroup>

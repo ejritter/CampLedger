@@ -22,6 +22,27 @@
         </Grid>
     </Shell.TitleView>
 
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="16,10" HeightRequest="48" VerticalOptions="Center">
+                <Image Grid.Column="0"
+                       Source="{Binding FlyoutIcon}"
+                       HeightRequest="18"
+                       WidthRequest="18"
+                       Aspect="AspectFit"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center" />
+                <Label Grid.Column="1"
+                       Text="{Binding Title}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource PrimaryTextColor}"
+                       VerticalOptions="Center"
+                       LineBreakMode="TailTruncation" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems" Route="MainMenu" Shell.TabBarIsVisible="False">
         <ShellContent Route="InventoryPage" Title="Inventory" ContentTemplate="{DataTemplate pages:InventoryPage}">
             <ShellContent.Icon>
@@ -43,25 +64,26 @@
     </FlyoutItem>
 
     <Shell.FlyoutFooter>
-        <Grid Padding="16,12" BackgroundColor="{DynamicResource SurfaceAltColor}">
+        <Grid Padding="16,14" BackgroundColor="{DynamicResource SurfaceAltColor}" HeightRequest="56" VerticalOptions="End">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnThemeGearTapped" />
             </Grid.GestureRecognizers>
 
-            <HorizontalStackLayout Spacing="8">
-                <Label
-                    FontFamily="Segoe Fluent Icons"
-                    FontSize="18"
-                    Text="&#xE713;"
-                    TextColor="{DynamicResource PrimaryTextColor}"
-                    VerticalOptions="Center" />
-                <Label
-                    FontAttributes="Bold"
-                    FontSize="14"
-                    Text="Theme"
-                    TextColor="{DynamicResource PrimaryTextColor}"
-                    VerticalOptions="Center" />
-            </HorizontalStackLayout>
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
+                <Label Grid.Column="0"
+                       FontFamily="Segoe Fluent Icons"
+                       FontSize="18"
+                       Text="&#xE713;"
+                       TextColor="{DynamicResource PrimaryTextColor}"
+                       VerticalOptions="Center" />
+                <Label Grid.Column="1"
+                       FontAttributes="Bold"
+                       FontSize="14"
+                       Text="Theme"
+                       TextColor="{DynamicResource PrimaryTextColor}"
+                       VerticalOptions="Center"
+                       LineBreakMode="TailTruncation" />
+            </Grid>
         </Grid>
     </Shell.FlyoutFooter>
 

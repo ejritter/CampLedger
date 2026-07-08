@@ -4,7 +4,7 @@
              xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
              x:Class="CampLedger.Pages.TripHistoryPage"
              x:DataType="viewModels:TripHistoryViewModel"
-             Title="Trip History"
+             Title="Travel History"
               Style="{StaticResource PageStyle}">
 
     <Grid>
@@ -114,13 +114,18 @@
                                     <!-- Editable checklist when editing trip details -->
                                     <VerticalStackLayout Spacing="6" IsVisible="{Binding IsEditingTripDetails}">
                                         <Label Text="Checklist:" FontAttributes="Bold" FontSize="12" Style="{StaticResource EmphasisLabel}" />
-                                        <CollectionView ItemsSource="{Binding EditingChecklistItems}" SelectionMode="None">
+                                        <CollectionView ItemsSource="{Binding EditingChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
+                                            <CollectionView.ItemsLayout>
+                                                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
+                                            </CollectionView.ItemsLayout>
                                             <CollectionView.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Padding="0,4">
-                                                        <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
-                                                        <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" />
-                                                    </Grid>
+                                                    <Border Padding="8" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 10">
+                                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                            <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
+                                                            <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" LineBreakMode="WordWrap" MaxLines="2" />
+                                                        </Grid>
+                                                    </Border>
                                                 </DataTemplate>
                                             </CollectionView.ItemTemplate>
                                         </CollectionView>
@@ -191,13 +196,18 @@
                     </HorizontalStackLayout>
 
                     <Label Text="Checklist:" FontAttributes="Bold" FontSize="14" Style="{StaticResource EmphasisLabel}" />
-                    <CollectionView ItemsSource="{Binding EditingChecklistItems}" SelectionMode="None">
+                    <CollectionView ItemsSource="{Binding EditingChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Padding="0,4">
-                                    <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
-                                    <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" />
-                                </Grid>
+                                <Border Padding="8" BackgroundColor="{DynamicResource SurfaceAltColor}" StrokeThickness="0" StrokeShape="RoundRectangle 10">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <CheckBox IsChecked="{Binding IsPacked}" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" LineBreakMode="WordWrap" MaxLines="2" />
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

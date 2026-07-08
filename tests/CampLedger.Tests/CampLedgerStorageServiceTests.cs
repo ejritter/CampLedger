@@ -2,6 +2,7 @@ using System.Text.Json;
 using CampLedger.Models;
 using CampLedger.Services;
 using Microsoft.Maui.Storage;
+using SQLite;
 
 namespace CampLedger.Tests;
 
@@ -150,6 +151,62 @@ public sealed class CampLedgerStorageServiceTests
     }
 
     [Fact]
+    public async Task Load_WhenNoPreferencesStateExists_MarksMigrationAsComplete()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var preferences = new InMemoryPreferences();
+
+        var sut = new CampLedgerStorageService(databasePath, preferences);
+        var reloaded = sut.Load();
+
+        await sut.CloseConnectionAsync();
+
+        Assert.Empty(reloaded.Needs);
+        Assert.Empty(reloaded.Wants);
+        Assert.Empty(reloaded.Has);
+        Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
+
+        File.Delete(databasePath);
+    }
+
+    [Fact]
+    public async Task Load_WhenMigrationWasInterruptedAndSqliteAlreadyHasState_CompletesAndClearsInProgress()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var preferences = new InMemoryPreferences();
+        var state = new CampLedgerState
+        {
+            Needs =
+            [
+                new InventoryItem { Name = "Tent", Bucket = InventoryBucket.Needs }
+            ]
+        };
+
+        preferences.Set("camp-ledger-state", JsonSerializer.Serialize(state), null);
+        preferences.Set("camp-ledger-sqlite-migrating", true, null);
+
+        using (var connection = new SQLiteConnection(databasePath, SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.FullMutex))
+        {
+            connection.Execute("CREATE TABLE IF NOT EXISTS InventoryItems (Id TEXT PRIMARY KEY, Name TEXT, Bucket INTEGER, PhotoData BLOB)");
+            connection.Execute("CREATE TABLE IF NOT EXISTS TripRecords (Id TEXT PRIMARY KEY, Date INTEGER, StartDate INTEGER, EndDate INTEGER, Notes TEXT, LocationName TEXT, LocationUrl TEXT, IsCurrent INTEGER)");
+            connection.Execute("CREATE TABLE IF NOT EXISTS TripChecklistItems (Id TEXT PRIMARY KEY, TripRecordId TEXT, ItemId TEXT, Name TEXT, IsPacked INTEGER, PhotoData BLOB)");
+            connection.Execute("INSERT INTO InventoryItems (Id, Name, Bucket, PhotoData) VALUES (?, ?, ?, ?)", new object[] { Guid.NewGuid().ToString(), "Old Item", (int)InventoryBucket.Needs, Array.Empty<byte>() });
+        }
+
+        var sut = new CampLedgerStorageService(databasePath, preferences);
+        var reloaded = sut.Load();
+
+        await sut.CloseConnectionAsync();
+
+        Assert.Single(reloaded.Needs);
+        Assert.Equal("Tent", reloaded.Needs[0].Name);
+        Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
+        Assert.False(preferences.Get("camp-ledger-sqlite-migrating", false, null));
+
+        File.Delete(databasePath);
+    }
+
+    [Fact]
     public async Task Load_WhenMigrationFlagIsSetButSqliteIsEmpty_MigratesPreferencesIntoSqlite()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
@@ -174,6 +231,105 @@ public sealed class CampLedgerStorageServiceTests
         Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
 
         File.Delete(databasePath);
+    }
+
+    [Fact]
+    public async Task Load_WhenPreferencesPayloadUsesInventoryArray_MigratesIntoSqlite()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var preferences = new InMemoryPreferences();
+        var legacyPayload = new
+        {
+            inventory = new object[]
+            {
+                new { name = "Tent", bucket = "Needs" },
+                new { name = "Lantern", bucket = "Wants" },
+                new { name = "Backpack", bucket = "Has" }
+            },
+            currentTrip = new
+            {
+                notes = "Pack early",
+                items = new[]
+                {
+                    new { name = "Tent", isPacked = false }
+                }
+            },
+            tripHistory = Array.Empty<object>()
+        };
+
+        preferences.Set("camp-ledger-state", JsonSerializer.Serialize(legacyPayload), null);
+
+        var sut = new CampLedgerStorageService(databasePath, preferences);
+        var reloaded = sut.Load();
+
+        await sut.CloseConnectionAsync();
+
+        Assert.Single(reloaded.Needs);
+        Assert.Single(reloaded.Wants);
+        Assert.Single(reloaded.Has);
+        Assert.Equal("Pack early", reloaded.CurrentTrip.Notes);
+        Assert.Single(reloaded.CurrentTrip.Items);
+        Assert.True(preferences.Get("camp-ledger-sqlite-migrated", false, null));
+
+        File.Delete(databasePath);
+    }
+
+    [Fact]
+    public async Task Load_PrefersExistingNonEmptyDatabaseOverEmptyRequestedPath()
+    {
+        var requestedPath = Path.Combine(Path.GetTempPath(), $"campledger-tests-{Guid.NewGuid():N}.db3");
+        var fallbackPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "User Name",
+            "EJRitterDevelopment.campledger",
+            "Data",
+            Path.GetFileName(requestedPath));
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(fallbackPath)!);
+            File.WriteAllText(requestedPath, string.Empty);
+
+            using (var fallbackConnection = new SQLiteConnection(fallbackPath, SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.FullMutex))
+            {
+                fallbackConnection.Execute("CREATE TABLE IF NOT EXISTS InventoryItems (Id TEXT PRIMARY KEY, Name TEXT, Bucket INTEGER, PhotoData BLOB)");
+                fallbackConnection.Execute("CREATE TABLE IF NOT EXISTS TripRecords (Id TEXT PRIMARY KEY, Date INTEGER, StartDate INTEGER, EndDate INTEGER, Notes TEXT, LocationName TEXT, LocationUrl TEXT, IsCurrent INTEGER)");
+                fallbackConnection.Execute("CREATE TABLE IF NOT EXISTS TripChecklistItems (Id TEXT PRIMARY KEY, TripRecordId TEXT, ItemId TEXT, Name TEXT, IsPacked INTEGER, PhotoData BLOB)");
+                fallbackConnection.Execute("INSERT INTO InventoryItems (Id, Name, Bucket, PhotoData) VALUES (?, ?, ?, ?)", new object[] { Guid.NewGuid().ToString(), "Tent", (int)InventoryBucket.Needs, Array.Empty<byte>() });
+            }
+
+            var sut = new CampLedgerStorageService(requestedPath);
+            var reloaded = sut.Load();
+
+            await sut.CloseConnectionAsync();
+
+            Assert.Single(reloaded.Needs);
+            Assert.Equal("Tent", reloaded.Needs[0].Name);
+        }
+        finally
+        {
+            if (File.Exists(requestedPath))
+            {
+                File.Delete(requestedPath);
+            }
+
+            if (File.Exists(fallbackPath))
+            {
+                File.Delete(fallbackPath);
+            }
+
+            var fallbackShmPath = fallbackPath + "-shm";
+            var fallbackWalPath = fallbackPath + "-wal";
+            if (File.Exists(fallbackShmPath))
+            {
+                File.Delete(fallbackShmPath);
+            }
+
+            if (File.Exists(fallbackWalPath))
+            {
+                File.Delete(fallbackWalPath);
+            }
+        }
     }
 
     private sealed class InMemoryPreferences : IPreferences
