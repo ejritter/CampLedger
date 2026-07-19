@@ -26,8 +26,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" />
-		<MauiSplashScreen Include="Resources\Splash\*" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg"
+				  BaseSize="100,100"
+				  Color="#184D37" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg"
+						 BaseSize="1024,1024"
+						 Color="#184D37" />
 		<MauiImage Include="Resources\Images\*" />
 		<MauiFont Include="Resources\Fonts\*" />
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
@@ -51,10 +55,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Converters\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiImage Include="Resources\Splash\splash.svg" />
 	</ItemGroup>
 
 	<ItemGroup>
