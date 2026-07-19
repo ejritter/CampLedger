@@ -9,6 +9,17 @@ namespace CampLedger.ViewModels;
 public sealed partial class InventoryViewModel : ViewModelBase
 {
     private readonly ICampLedgerStateService _stateService;
+    private bool _isDragging;
+    private bool _snapshottedIsNeedsExpanded;
+    private bool _snapshottedIsWantsExpanded;
+    private bool _snapshottedIsHasExpanded;
+    private InventoryItemViewModel? _draggedItem;
+
+    public event EventHandler? EditRequested;
+    public event EventHandler? EditDismissRequested;
+    public event EventHandler? PhotoPreviewRequested;
+    public event EventHandler? PhotoPreviewDismissRequested;
+
 
     [ObservableProperty]
     public partial string NewNeedsItemName { get; set; } = string.Empty;
@@ -49,6 +60,12 @@ public sealed partial class InventoryViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasToggleText))]
     public partial bool IsHasExpanded { get; set; } = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNeedsDragSource))]
+    [NotifyPropertyChangedFor(nameof(IsWantsDragSource))]
+    [NotifyPropertyChangedFor(nameof(IsHasDragSource))]
+    public partial InventoryBucket? DragSourceBucket { get; set; }
 
     public InventoryViewModel(ICampLedgerStateService stateService)
     {
@@ -119,6 +136,30 @@ public sealed partial class InventoryViewModel : ViewModelBase
             }
 
             return "Expand";
+        }
+    }
+
+    public bool IsNeedsDragSource
+    {
+        get
+        {
+            return DragSourceBucket == InventoryBucket.Needs;
+        }
+    }
+
+    public bool IsWantsDragSource
+    {
+        get
+        {
+            return DragSourceBucket == InventoryBucket.Wants;
+        }
+    }
+
+    public bool IsHasDragSource
+    {
+        get
+        {
+            return DragSourceBucket == InventoryBucket.Has;
         }
     }
 
@@ -248,6 +289,7 @@ public sealed partial class InventoryViewModel : ViewModelBase
 
         EditingItem = item;
         EditingItemName = item.Name;
+        EditRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -275,6 +317,7 @@ public sealed partial class InventoryViewModel : ViewModelBase
     {
         EditingItem = null;
         EditingItemName = string.Empty;
+        EditDismissRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void RefreshAllItems()
@@ -412,6 +455,7 @@ public sealed partial class InventoryViewModel : ViewModelBase
         PhotoPreviewItem = item;
         PhotoPreviewSource = item.PhotoSource;
         IsPhotoPreviewVisible = true;
+        PhotoPreviewRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -420,6 +464,7 @@ public sealed partial class InventoryViewModel : ViewModelBase
         IsPhotoPreviewVisible = false;
         PhotoPreviewSource = null;
         PhotoPreviewItem = null;
+        PhotoPreviewDismissRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public void SetItemPhoto(Guid itemId, InventoryBucket bucket, byte[] photoData)
@@ -443,5 +488,47 @@ public sealed partial class InventoryViewModel : ViewModelBase
         }
 
         Persist();
+    }
+
+    public void BeginDrag(InventoryItemViewModel? item)
+    {
+        if (_isDragging || item is null)
+        {
+            return;
+        }
+
+        _snapshottedIsNeedsExpanded = IsNeedsExpanded;
+        _snapshottedIsWantsExpanded = IsWantsExpanded;
+        _snapshottedIsHasExpanded = IsHasExpanded;
+
+        IsNeedsExpanded = false;
+        IsWantsExpanded = false;
+        IsHasExpanded = false;
+
+        _draggedItem = item;
+        _draggedItem.IsBeingDragged = true;
+        DragSourceBucket = item.Bucket;
+        _isDragging = true;
+    }
+
+    public void EndDrag()
+    {
+        if (!_isDragging)
+        {
+            return;
+        }
+
+        IsNeedsExpanded = _snapshottedIsNeedsExpanded;
+        IsWantsExpanded = _snapshottedIsWantsExpanded;
+        IsHasExpanded = _snapshottedIsHasExpanded;
+
+        if (_draggedItem is not null)
+        {
+            _draggedItem.IsBeingDragged = false;
+            _draggedItem = null;
+        }
+
+        DragSourceBucket = null;
+        _isDragging = false;
     }
 }

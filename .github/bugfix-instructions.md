@@ -5,5 +5,4 @@
 - use copilot skill `C:\Users\roija\.copilot\skills\test-driven-development-maui`
 
 ## bugs
-- Dragging items from `Needs` to `Wants` isn't moving the actual item between list. It's creating a new item.
-- Items should be able to drag between `Needs` `Wants` and `Has`
+- When dragging items between Wants Needs and Has, the Border background color is set to BackgroundColor="{DynamicResource SurfaceColor}". It changes when the item hovers over the list to #D8CCFF as it should, but when the item leaves the area of the drag gesture, it does not go back to the #FFF9F0 color it should be. 

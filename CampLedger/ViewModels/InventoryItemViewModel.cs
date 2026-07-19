@@ -28,6 +28,9 @@ public sealed partial class InventoryItemViewModel : ViewModelBase
     public partial bool IsPhotoExpanded { get; set; }
 
     [ObservableProperty]
+    public partial bool IsBeingDragged { get; set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPhoto))]
     [NotifyPropertyChangedFor(nameof(PhotoSource))]
     [NotifyPropertyChangedFor(nameof(TogglePhotoButtonText))]

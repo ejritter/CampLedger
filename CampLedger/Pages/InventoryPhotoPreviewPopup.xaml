@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
+               x:Class="CampLedger.Pages.InventoryPhotoPreviewPopup"
+               x:DataType="viewModels:InventoryViewModel"
+               CanBeDismissedByTappingOutsideOfPopup="True">
+
+    <Border Padding="20"
+            BackgroundColor="{DynamicResource SurfaceColor}"
+            StrokeShape="RoundRectangle 16"
+            StrokeThickness="1"
+            WidthRequest="500"
+            MinimumWidthRequest="300"
+            MaximumWidthRequest="600">
+        <Border.Stroke>
+            <SolidColorBrush Color="{DynamicResource BorderColor}" />
+        </Border.Stroke>
+
+        <VerticalStackLayout Spacing="16">
+            <Label Text="Photo Preview"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   TextColor="{DynamicResource PrimaryTextColor}" />
+
+            <Border StrokeShape="RoundRectangle 12"
+                    StrokeThickness="1"
+                    BackgroundColor="{DynamicResource SurfaceAltColor}"
+                    HeightRequest="400"
+                    MinimumHeightRequest="200"
+                    MaximumHeightRequest="600">
+                <Border.Stroke>
+                    <SolidColorBrush Color="{DynamicResource BorderColor}" />
+                </Border.Stroke>
+                
+                <Image Source="{Binding PhotoPreviewSource}"
+                       Aspect="AspectFit"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Border>
+
+            <Button Text="Close"
+                    Command="{Binding ClosePhotoPreviewCommand}"
+                    CornerRadius="14"
+                    HeightRequest="48"
+                    BackgroundColor="{DynamicResource TertiaryTextColor}"
+                    TextColor="White" />
+        </VerticalStackLayout>
+    </Border>
+</toolkit:Popup>

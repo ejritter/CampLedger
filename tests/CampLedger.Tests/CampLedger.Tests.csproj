@@ -33,6 +33,9 @@
     <Compile Include="..\..\CampLedger\Models\TripChecklistItem.cs" Link="Models\TripChecklistItem.cs" />
     <Compile Include="..\..\CampLedger\Models\TripLocation.cs" Link="Models\TripLocation.cs" />
     <Compile Include="..\..\CampLedger\Models\TripRecord.cs" Link="Models\TripRecord.cs" />
+    <Compile Include="..\..\CampLedger\ViewModels\ViewModelBase.cs" Link="ViewModels\ViewModelBase.cs" />
+    <Compile Include="..\..\CampLedger\ViewModels\InventoryItemViewModel.cs" Link="ViewModels\InventoryItemViewModel.cs" />
+    <Compile Include="..\..\CampLedger\ViewModels\InventoryViewModel.cs" Link="ViewModels\InventoryViewModel.cs" />
     <Compile Include="..\..\CampLedger\Pages\PageBindingContextExtensions.cs" Link="Pages\PageBindingContextExtensions.cs" />
     <Compile Include="..\..\CampLedger\Services\CurrentPageProvider.cs" Link="Services\CurrentPageProvider.cs" />
     <Compile Include="..\..\CampLedger\Services\NavBarItemVisualRefresher.cs" Link="Services\NavBarItemVisualRefresher.cs" />
@@ -42,7 +45,6 @@
     <Compile Remove="ThemeSettingsViewModelTests.cs" />
     <Compile Remove="ThemeServiceTests.cs" />
     <Compile Remove="UnitTest1.cs" />
-    <Compile Remove="TestDoubles\InMemoryPreferences.cs" />
     <Compile Remove="TestDoubles\RecordingThemeService.cs" />
   </ItemGroup>
 

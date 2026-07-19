@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:viewModels="clr-namespace:CampLedger.ViewModels"
+               x:Class="CampLedger.Pages.InventoryItemEditPopup"
+               x:DataType="viewModels:InventoryViewModel"
+               CanBeDismissedByTappingOutsideOfPopup="True">
+
+    <Border Padding="20"
+            BackgroundColor="{DynamicResource SurfaceColor}"
+            StrokeShape="RoundRectangle 16"
+            StrokeThickness="1"
+            WidthRequest="400"
+            MinimumWidthRequest="300"
+            MaximumWidthRequest="500">
+        <Border.Stroke>
+            <SolidColorBrush Color="{DynamicResource BorderColor}" />
+        </Border.Stroke>
+
+        <VerticalStackLayout Spacing="16">
+            <Label Text="Edit Item"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   TextColor="{DynamicResource PrimaryTextColor}" />
+
+            <Entry Text="{Binding EditingItemName}"
+                   Placeholder="Item name"
+                   FontSize="16" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Grid.Column="0"
+                        Text="Save"
+                        Command="{Binding SaveEditCommand}"
+                        CornerRadius="14"
+                        HeightRequest="48"
+                        BackgroundColor="{DynamicResource SuccessColor}"
+                        TextColor="White" />
+                <Button Grid.Column="1"
+                        Text="Cancel"
+                        Command="{Binding CancelEditCommand}"
+                        CornerRadius="14"
+                        HeightRequest="48"
+                        BackgroundColor="{DynamicResource TertiaryTextColor}"
+                        TextColor="White" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</toolkit:Popup>

@@ -2,6 +2,7 @@ using System.IO;
 using CampLedger.Models;
 using CampLedger.Services;
 using CampLedger.ViewModels;
+using CommunityToolkit.Maui.Extensions;
 
 namespace CampLedger.Pages;
 
@@ -16,6 +17,8 @@ public partial class InventoryPage : ContentPage
     {
         InitializeComponent();
         this.AttachViewModel(viewModel);
+        ViewModel.EditRequested += OnEditRequested;
+        ViewModel.PhotoPreviewRequested += OnPhotoPreviewRequested;
     }
 
     private static InventoryViewModel CreateViewModel()
@@ -129,7 +132,11 @@ public partial class InventoryPage : ContentPage
                     return;
                 }
 
-                photo = await MediaPicker.Default.PickPhotoAsync();
+                var pickedPhotos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
+                {
+                    SelectionLimit = 1
+                });
+                photo = pickedPhotos?.FirstOrDefault();
                 if (photo is null)
                 {
                     return;
@@ -205,6 +212,12 @@ public partial class InventoryPage : ContentPage
 
         e.Data.Properties[DragItemIdKey] = item.Id.ToString();
         e.Data.Properties[DragBucketKey] = item.Bucket.ToString();
+        ViewModel.BeginDrag(item);
+    }
+
+    private void OnItemDropCompleted(object? sender, DropCompletedEventArgs e)
+    {
+        ViewModel.EndDrag();
     }
 
     private void OnNeedsDropZoneDragOver(object? sender, DragEventArgs e)
@@ -236,10 +249,7 @@ public partial class InventoryPage : ContentPage
 
     private void OnDropZoneDragLeave(object? sender, DragEventArgs e)
     {
-        if (sender is Border zone)
-        {
-            zone.BackgroundColor = Colors.Transparent;
-        }
+        ResetDropZoneBackground(sender);
     }
 
     private void OnNeedsDropZoneDrop(object? sender, DropEventArgs e)
@@ -274,10 +284,7 @@ public partial class InventoryPage : ContentPage
 
     private void HandleZoneDrop(DropEventArgs e, InventoryBucket toBucket, object? sender)
     {
-        if (sender is Border zone)
-        {
-            zone.BackgroundColor = Colors.Transparent;
-        }
+        ResetDropZoneBackground(sender);
 
         if (!e.Data.Properties.TryGetValue(DragItemIdKey, out var itemIdRaw) ||
             !e.Data.Properties.TryGetValue(DragBucketKey, out var bucketRaw) ||
@@ -290,5 +297,55 @@ public partial class InventoryPage : ContentPage
         }
 
         ViewModel.MoveItem(itemId, fromBucket, toBucket);
+    }
+
+    private static void ResetDropZoneBackground(object? sender)
+    {
+        if (sender is not Border zone)
+        {
+            return;
+        }
+
+        zone.ClearValue(VisualElement.BackgroundColorProperty);
+        zone.SetDynamicResource(VisualElement.BackgroundColorProperty, "SurfaceColor");
+    }
+
+    private async void OnEditRequested(object? sender, EventArgs e)
+    {
+        var popup = new InventoryItemEditPopup(ViewModel);
+        await this.GetPresentingPage().ShowPopupAsync(popup);
+    }
+
+    private async void OnPhotoPreviewRequested(object? sender, EventArgs e)
+    {
+        var popup = new InventoryPhotoPreviewPopup(ViewModel);
+        await this.GetPresentingPage().ShowPopupAsync(popup);
+    }
+
+    private void OnEditItemClicked(object? sender, EventArgs e)
+    {
+        if (sender is not Button button || button.BindingContext is not InventoryItemViewModel item)
+        {
+            return;
+        }
+
+        ViewModel.EditItemCommand.Execute(item);
+    }
+
+    private void OnPhotoPreviewClicked(object? sender, EventArgs e)
+    {
+        if (sender is not Button button || button.BindingContext is not InventoryItemViewModel item)
+        {
+            return;
+        }
+
+        ViewModel.OpenPhotoPreviewCommand.Execute(item);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        ViewModel.EditRequested -= OnEditRequested;
+        ViewModel.PhotoPreviewRequested -= OnPhotoPreviewRequested;
     }
 }

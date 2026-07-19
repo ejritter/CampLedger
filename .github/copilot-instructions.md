@@ -38,11 +38,14 @@ Each list must:
 **Example:** Search bug spray it is in has list, but i need to refill. So I can just drag it to Needs.
 
 ### 2. Drag-and-Drop Interaction
-
 The app must support:
 
 - Long-press gesture to initiate drag.
 - Visual feedback during drag.
+- Visually identify the source list while an item is being dragged.
+- Visually identify the destination list while the dragged item hovers over it.
+- Restore each destination list's normal `SurfaceColor` background when the drag leaves the list or completes.
+- Automatically collapse all three lists when dragging begins and restore their prior expanded/collapsed states when dragging ends.
 - Dropping into any other list.
 - Automatic list updates after drop.
 
