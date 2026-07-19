@@ -78,6 +78,10 @@ public sealed partial class InventoryViewModel : ViewModelBase
         NeedsItems = new ObservableCollection<InventoryItemViewModel>(AllNeedsItems);
         WantsItems = new ObservableCollection<InventoryItemViewModel>(AllWantsItems);
         HasItems = new ObservableCollection<InventoryItemViewModel>(AllHasItems);
+
+        NeedsItems.CollectionChanged += OnInventoryItemsChanged;
+        WantsItems.CollectionChanged += OnInventoryItemsChanged;
+        HasItems.CollectionChanged += OnInventoryItemsChanged;
     }
 
     public ObservableCollection<InventoryItemViewModel> AllNeedsItems { get; }
@@ -91,6 +95,12 @@ public sealed partial class InventoryViewModel : ViewModelBase
     public ObservableCollection<InventoryItemViewModel> WantsItems { get; }
 
     public ObservableCollection<InventoryItemViewModel> HasItems { get; }
+
+    public bool IsNeedsToggleVisible => NeedsItems.Count > 0;
+
+    public bool IsWantsToggleVisible => WantsItems.Count > 0;
+
+    public bool IsHasToggleVisible => HasItems.Count > 0;
 
     public bool IsEditing
     {
@@ -160,6 +170,28 @@ public sealed partial class InventoryViewModel : ViewModelBase
         get
         {
             return DragSourceBucket == InventoryBucket.Has;
+        }
+    }
+
+    private void OnInventoryItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(IsNeedsToggleVisible));
+        OnPropertyChanged(nameof(IsWantsToggleVisible));
+        OnPropertyChanged(nameof(IsHasToggleVisible));
+
+        if (NeedsItems.Count == 0)
+        {
+            IsNeedsExpanded = true;
+        }
+
+        if (WantsItems.Count == 0)
+        {
+            IsWantsExpanded = true;
+        }
+
+        if (HasItems.Count == 0)
+        {
+            IsHasExpanded = true;
         }
     }
 

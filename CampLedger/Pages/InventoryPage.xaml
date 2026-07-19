@@ -19,7 +19,7 @@
                            SearchCommand="{Binding SearchCommand}"
                            SearchCommandParameter="{Binding Text, Source={x:Reference SearchBar}}"
                            TextChanged="OnSearchTextChanged" />
-                <Button Text="Clear" Clicked="OnClearSearchClicked" />
+                <Button Clicked="OnClearSearchClicked" ImageSource="{FontImageSource Glyph={StaticResource IconClear}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Clear search" />
             </VerticalStackLayout>
         </Border>
 
@@ -46,14 +46,20 @@
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <Label Text="Needs" FontAttributes="Bold" FontSize="20"
                                    TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding NeedsToggleText}"
+                            <Button Grid.Column="1" IsVisible="{Binding IsNeedsToggleVisible}" ImageSource="{FontImageSource Glyph={StaticResource IconExpand}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Expand or collapse Needs"
                                     Command="{Binding ToggleNeedsExpandedCommand}"
-                                    MinimumWidthRequest="44" />
+                                    MinimumWidthRequest="44">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsNeedsExpanded}" Value="True">
+                                       <Setter Property="ImageSource" Value="{FontImageSource Glyph={StaticResource IconCollapse}, FontFamily={StaticResource IconFontFamily}, Size=20}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                         </Grid>
                         <VerticalStackLayout IsVisible="{Binding IsNeedsExpanded}" Spacing="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <Entry Grid.Column="0" Placeholder="Add a needed item" Text="{Binding NewNeedsItemName}" ReturnCommand="{Binding AddNeedsItemCommand}"/>
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddNeedsItemCommand}" />
+                                <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconAdd}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add item" Command="{Binding AddNeedsItemCommand}" />
                             </Grid>
                             <CollectionView ItemsSource="{Binding NeedsItems}" SelectionMode="None"
                                             ItemSizingStrategy="MeasureFirstItem">
@@ -80,12 +86,12 @@
                                             <VerticalStackLayout Spacing="8">
                                                 <Label Text="{Binding Name}" FontAttributes="Bold" LineBreakMode="WordWrap" />
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                    <Button Text="Edit" Clicked="OnEditItemClicked" />
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" />
+                                                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconEdit}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Edit item" Clicked="OnEditItemClicked" />
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconCamera}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add photo" Clicked="OnAddPhotoClicked" />
                                                 </Grid>
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                                     <Button Text="Preview" Clicked="OnPhotoPreviewClicked" IsVisible="{Binding HasPhoto}" />
-                                                    <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked"
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconRemove}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Remove item" Clicked="OnRemoveItemClicked"
                                                             BackgroundColor="{DynamicResource ErrorColor}" />
                                                 </Grid>
                                             </VerticalStackLayout>
@@ -118,14 +124,20 @@
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <Label Text="Wants" FontAttributes="Bold" FontSize="20"
                                    TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding WantsToggleText}"
+                            <Button Grid.Column="1" IsVisible="{Binding IsWantsToggleVisible}" ImageSource="{FontImageSource Glyph={StaticResource IconExpand}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Expand or collapse Wants"
                                     Command="{Binding ToggleWantsExpandedCommand}"
-                                    MinimumWidthRequest="44" />
+                                    MinimumWidthRequest="44">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsWantsExpanded}" Value="True">
+                                       <Setter Property="ImageSource" Value="{FontImageSource Glyph={StaticResource IconCollapse}, FontFamily={StaticResource IconFontFamily}, Size=20}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                         </Grid>
                         <VerticalStackLayout IsVisible="{Binding IsWantsExpanded}" Spacing="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <Entry Grid.Column="0" Placeholder="Add an optional item" Text="{Binding NewWantsItemName}" ReturnCommand="{Binding AddWantsItemCommand}" />
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddWantsItemCommand}" />
+                                <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconAdd}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add item" Command="{Binding AddWantsItemCommand}" />
                             </Grid>
                             <CollectionView ItemsSource="{Binding WantsItems}" SelectionMode="None"
                                             ItemSizingStrategy="MeasureFirstItem">
@@ -152,12 +164,12 @@
                                             <VerticalStackLayout Spacing="8">
                                                 <Label Text="{Binding Name}" FontAttributes="Bold" LineBreakMode="WordWrap" />
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                    <Button Text="Edit" Clicked="OnEditItemClicked" />
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" />
+                                                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconEdit}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Edit item" Clicked="OnEditItemClicked" />
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconCamera}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add photo" Clicked="OnAddPhotoClicked" />
                                                 </Grid>
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                                     <Button Text="Preview" Clicked="OnPhotoPreviewClicked" IsVisible="{Binding HasPhoto}" />
-                                                    <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked"
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconRemove}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Remove item" Clicked="OnRemoveItemClicked"
                                                             BackgroundColor="{DynamicResource ErrorColor}" />
                                                 </Grid>
                                             </VerticalStackLayout>
@@ -190,14 +202,20 @@
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <Label Text="Has" FontAttributes="Bold" FontSize="20"
                                    TextColor="{DynamicResource PrimaryColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding HasToggleText}"
+                            <Button Grid.Column="1" IsVisible="{Binding IsHasToggleVisible}" ImageSource="{FontImageSource Glyph={StaticResource IconExpand}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Expand or collapse Has"
                                     Command="{Binding ToggleHasExpandedCommand}"
-                                    MinimumWidthRequest="44" />
+                                    MinimumWidthRequest="44">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsHasExpanded}" Value="True">
+                                       <Setter Property="ImageSource" Value="{FontImageSource Glyph={StaticResource IconCollapse}, FontFamily={StaticResource IconFontFamily}, Size=20}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                         </Grid>
                         <VerticalStackLayout IsVisible="{Binding IsHasExpanded}" Spacing="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <Entry Grid.Column="0" Placeholder="Add an owned item" Text="{Binding NewHasItemName}" ReturnCommand="{Binding AddHasItemCommand}"/>
-                                <Button Grid.Column="1" Text="Add" Command="{Binding AddHasItemCommand}" />
+                                <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconAdd}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add item" Command="{Binding AddHasItemCommand}" />
                             </Grid>
                             <CollectionView ItemsSource="{Binding HasItems}" SelectionMode="None"
                                             ItemSizingStrategy="MeasureFirstItem">
@@ -224,12 +242,12 @@
                                             <VerticalStackLayout Spacing="8">
                                                 <Label Text="{Binding Name}" FontAttributes="Bold" LineBreakMode="WordWrap" />
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                    <Button Text="Edit" Clicked="OnEditItemClicked" />
-                                                    <Button Grid.Column="1" Text="{Binding PhotoActionText}" Clicked="OnAddPhotoClicked" />
+                                                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconEdit}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Edit item" Clicked="OnEditItemClicked" />
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconCamera}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add photo" Clicked="OnAddPhotoClicked" />
                                                 </Grid>
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                                     <Button Text="Preview" Clicked="OnPhotoPreviewClicked" IsVisible="{Binding HasPhoto}" />
-                                                    <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveItemClicked"
+                                                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconRemove}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Remove item" Clicked="OnRemoveItemClicked"
                                                             BackgroundColor="{DynamicResource ErrorColor}" />
                                                 </Grid>
                                             </VerticalStackLayout>

@@ -2,6 +2,21 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
+    <x:String x:Key="IconFontFamily">Segoe Fluent Icons</x:String>
+    <x:String x:Key="IconAdd">&#xE710;</x:String>
+    <x:String x:Key="IconEdit">&#xE70F;</x:String>
+    <x:String x:Key="IconExpand">&#xE70D;</x:String>
+    <x:String x:Key="IconCollapse">&#xE70E;</x:String>
+    <x:String x:Key="IconClear">&#xE894;</x:String>
+    <x:String x:Key="IconCamera">&#xE722;</x:String>
+    <x:String x:Key="IconRemove">&#xE74D;</x:String>
+    <x:String x:Key="IconLocation">&#xE81D;</x:String>
+    <x:String x:Key="IconSave">&#xE74E;</x:String>
+    <x:String x:Key="IconComplete">&#xE8FB;</x:String>
+    <x:String x:Key="IconFilter">&#xE71C;</x:String>
+    <x:String x:Key="IconShowAll">&#xE8FD;</x:String>
+    <x:String x:Key="IconRefresh">&#xE72C;</x:String>
+
     <Style x:Key="PageStyle" TargetType="ContentPage">
         <Setter Property="Padding" Value="0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource PageBackgroundColor}" />

@@ -31,7 +31,7 @@
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                             <Label Grid.Column="0" Text="{Binding CurrentTripLocation.LocationName, StringFormat='Location: {0}'}" VerticalOptions="Center" HorizontalOptions="Start" TextColor="{DynamicResource PrimaryTextColor}" LineBreakMode="TailTruncation" MaxLines="1" IsVisible="{Binding HasCurrentTripLocation}" />
                             <Label Grid.Column="0" Text="No location added yet" VerticalOptions="Center" HorizontalOptions="Start" TextColor="{DynamicResource TertiaryTextColor}" FontAttributes="Italic" LineBreakMode="TailTruncation" MaxLines="1" IsVisible="{Binding NoCurrentTripLocation}" />
-                            <Button Grid.Column="1" Text="{Binding LocationButtonText}" Command="{Binding OpenLocationPopupCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" Padding="12,6" FontSize="12" LineBreakMode="TailTruncation" />
+                            <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconLocation}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Add location" Command="{Binding OpenLocationPopupCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" Padding="12,6" FontSize="12" />
                             <Button Grid.Column="2" Text="Clear Location" Command="{Binding ClearTripLocationCommand}" BackgroundColor="{DynamicResource TertiaryTextColor}" TextColor="White" IsVisible="{Binding HasCurrentTripLocation}" />
                         </Grid>
                     </VerticalStackLayout>
@@ -39,14 +39,20 @@
 
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                     <SearchBar x:Name="TripSearchBar" Grid.Column="0" Placeholder="Search packed and unpacked items..." SearchCommand="{Binding SearchCommand}" SearchCommandParameter="{Binding Text, Source={x:Reference TripSearchBar}}" TextChanged="OnTripSearchTextChanged" />
-                    <Button Grid.Column="1" Text="Clear" Clicked="OnClearTripSearchClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" VerticalOptions="Center" />
+                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconClear}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Clear search" Clicked="OnClearTripSearchClicked" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" VerticalOptions="Center" />
                 </Grid>
 
                 <Border Padding="12" BackgroundColor="{DynamicResource SurfaceColor}" StrokeThickness="2" Stroke="{DynamicResource WarningColor}" StrokeShape="RoundRectangle 16">
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <Label Text="Unpacked Items" FontAttributes="Bold" FontSize="18" TextColor="{DynamicResource WarningColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding UnpackedToggleText}" Command="{Binding ToggleUnpackedExpandedCommand}" BackgroundColor="{DynamicResource WarningColor}" TextColor="White" FontSize="12" Padding="12,6" />
+                            <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconExpand}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Expand or collapse unpacked items" Command="{Binding ToggleUnpackedExpandedCommand}" BackgroundColor="{DynamicResource WarningColor}" TextColor="White" FontSize="12" Padding="12,6">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsUnpackedExpanded}" Value="True">
+                                        <Setter Property="ImageSource" Value="{FontImageSource Glyph={StaticResource IconCollapse}, FontFamily={StaticResource IconFontFamily}, Size=20}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                         </Grid>
                         <VerticalStackLayout Spacing="10" IsVisible="{Binding IsUnpackedExpanded}">
                             <CollectionView ItemsSource="{Binding FilteredUnpackedChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
@@ -65,7 +71,7 @@
                                                     <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextColor="{DynamicResource PrimaryTextColor}" LineBreakMode="WordWrap" MaxLines="2" />
                                                 </Grid>
                                                 <VerticalStackLayout Grid.Row="1" Spacing="6" IsVisible="{Binding HasPhoto}">
-                                                    <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
+                                                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconCamera}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Show photo" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
                                                     <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="120" WidthRequest="120" HorizontalOptions="Start">
                                                         <Image.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripLedgerViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
@@ -85,7 +91,13 @@
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <Label Text="Packed Items" FontAttributes="Bold" FontSize="18" TextColor="{DynamicResource SuccessColor}" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="{Binding PackedToggleText}" Command="{Binding TogglePackedExpandedCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" FontSize="12" Padding="12,6" />
+                            <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconExpand}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Expand or collapse packed items" Command="{Binding TogglePackedExpandedCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" FontSize="12" Padding="12,6">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsPackedExpanded}" Value="True">
+                                        <Setter Property="ImageSource" Value="{FontImageSource Glyph={StaticResource IconCollapse}, FontFamily={StaticResource IconFontFamily}, Size=20}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                         </Grid>
                         <VerticalStackLayout Spacing="10" IsVisible="{Binding IsPackedExpanded}">
                             <CollectionView ItemsSource="{Binding FilteredPackedChecklistItems}" SelectionMode="None" Margin="0,2,0,0" ItemSizingStrategy="MeasureFirstItem">
@@ -104,7 +116,7 @@
                                                     <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" TextDecorations="Strikethrough" TextColor="{DynamicResource PrimaryColor}" LineBreakMode="WordWrap" MaxLines="2" />
                                                 </Grid>
                                                 <VerticalStackLayout Grid.Row="1" Spacing="6" IsVisible="{Binding HasPhoto}">
-                                                    <Button Text="{Binding TogglePhotoButtonText}" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
+                                                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconCamera}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Show photo" Command="{Binding TogglePhotoCommand}" BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource PrimaryTextColor}" FontSize="12" Padding="8,4" HorizontalOptions="Start" />
                                                     <Image Source="{Binding PhotoSource}" IsVisible="{Binding IsPhotoExpanded}" Aspect="AspectFit" HeightRequest="120" WidthRequest="120" HorizontalOptions="Start">
                                                         <Image.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:TripLedgerViewModel}}, Path=OpenPhotoPreviewCommand}" CommandParameter="{Binding .}" />
@@ -121,8 +133,8 @@
                 </Border>
 
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                    <Button Text="Save Trip" Command="{Binding SaveTripWithToastCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
-                    <Button Grid.Column="1" Text="Complete Trip" Command="{Binding CompleteTripCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" />
+                    <Button ImageSource="{FontImageSource Glyph={StaticResource IconSave}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Save trip" Command="{Binding SaveTripWithToastCommand}" BackgroundColor="{DynamicResource PrimaryColor}" TextColor="White" />
+                    <Button Grid.Column="1" ImageSource="{FontImageSource Glyph={StaticResource IconComplete}, FontFamily={StaticResource IconFontFamily}, Size=20}" SemanticProperties.Description="Complete trip" Command="{Binding CompleteTripCommand}" BackgroundColor="{DynamicResource SuccessColor}" TextColor="White" />
                 </Grid>
             </VerticalStackLayout>
         </ScrollView>
